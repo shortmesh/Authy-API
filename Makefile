@@ -1,5 +1,27 @@
 all: build test
 
+setup:
+	@echo "Setting up development environment..."
+	@if [ ! -f .env ]; then \
+		echo "Creating .env from .env.example..."; \
+		cp .env.example .env; \
+	fi
+	@if ! grep -q "^ENCRYPTION_KEY=[A-Za-z0-9+/=]\{40,\}" .env 2>/dev/null; then \
+		echo "Generating ENCRYPTION_KEY..."; \
+		ENCRYPTION_KEY=$$(openssl rand -base64 32); \
+		sed -i.bak "s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$$ENCRYPTION_KEY|" .env && rm -f .env.bak; \
+	else \
+		echo "ENCRYPTION_KEY already set"; \
+	fi
+	@if ! grep -q "^HASH_KEY=[A-Za-z0-9+/=]\{40,\}" .env 2>/dev/null; then \
+		echo "Generating HASH_KEY..."; \
+		HASH_KEY=$$(openssl rand -base64 32); \
+		sed -i.bak "s|^HASH_KEY=.*|HASH_KEY=$$HASH_KEY|" .env && rm -f .env.bak; \
+	else \
+		echo "HASH_KEY already set"; \
+	fi
+	@echo "Setup complete! Run 'make migrate-up && make run' to start."
+
 build:
 	@echo "Building..."
 	@go build -o bin/api cmd/api/main.go
@@ -40,4 +62,4 @@ clean:
 	@echo "Cleaning..."
 	@rm -rf bin
 
-.PHONY: all build run test clean itest migrate-up migrate-down migrate-fresh migrate-status docs
+.PHONY: all setup build run test clean itest migrate-up migrate-down migrate-fresh migrate-status docs

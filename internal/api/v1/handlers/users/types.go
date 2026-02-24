@@ -17,8 +17,8 @@ type LoginRequest struct {
 // UserResponse represents the response after user operations
 type UserResponse struct {
 	Message      string `json:"message,omitempty" example:"User created successfully"`
-	ClientID     string `json:"client_id" example:"1234567890abcdef"`
-	ClientSecret string `json:"client_secret" example:"abcdef12345678901234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"`
+	ClientID     string `json:"client_id" example:"CYDD4YLEmwQ3TCiSFidaFQ=="`
+	ClientSecret string `json:"client_secret" example:"ux5Wa2P790vyHTzeaKWQkpfUb0BNGA7qQkz5JnH4k-Y="`
 }
 
 // ErrorResponse represents an error response

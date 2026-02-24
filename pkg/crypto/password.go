@@ -4,6 +4,8 @@ import (
 	"os"
 	"strconv"
 
+	"authy-api/pkg/logger"
+
 	"github.com/alexedwards/argon2id"
 )
 
@@ -46,6 +48,14 @@ func getArgon2Params() *argon2id.Params {
 		}
 	}
 
+	logger.Log.Debugf(
+		"Argon2 params: mem=%dKB iter=%d par=%d salt=%dB key=%dB",
+		params.Memory,
+		params.Iterations,
+		params.Parallelism,
+		params.SaltLength,
+		params.KeyLength,
+	)
 	return params
 }
 

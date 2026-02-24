@@ -1,109 +1,79 @@
 # Authy API
 
-An API for generating, sending, and verifying OTP codes
+API for generating, sending, and verifying OTP codes.
 
-## Requirements
+## Table of Contents
 
-- Go 1.24.0 or higher
-- MySQL (optional - SQLite is used by default)
+- [Quick Start](#quick-start)
+- [Requirements](#requirements)
+- [Configuration](#configuration)
+- [Development](#development)
+- [API Documentation](#api-documentation)
+- [Resources](#resources)
 
 ## Quick Start
 
 ```bash
 git clone https://github.com/shortmesh/Authy-API.git
-cd Interface-API
-cp .env.example .env
+cd Authy-API
+make setup
 make migrate-up
 make run
 ```
 
-Server runs on `http://localhost:8080`
+Server: `http://localhost:8080`
+
+## Requirements
+
+- Go 1.25.0+
+- SQLite (default) or MySQL
 
 ## Configuration
 
-All configuration via environment variables in `.env` file:
+> [!NOTE]
+> `.env.default` contains operational default values. Only modify if you know what you're doing.
 
-### Server
+Copy `.env.example` to `.env` and configure as needed:
 
-```env
-PORT=8080                    # Server port
-LOG_LEVEL=info               # Logging level: debug, info, warn, error, fatal
+```bash
+cp .env.example .env
+# Or use: make setup (auto-generates keys)
 ```
 
-### Database
+See `.env.example` for all available options.
 
-Choose SQLite (default) or MySQL:
+> [!WARNING]
+> **Production:** Set `AUTO_MIGRATE=false` and `AUTO_CREATE_TABLES=false`, then run `make migrate-up`.
 
-**SQLite:**
+## Development
 
-```env
-SQLITE_DB_PATH=./shortmesh.db
+### Commands
+
+```bash
+make setup            # Setup .env with auto-generated keys
+make run              # Start server
+make build            # Build binaries 
+make test             # Run tests
+make docs             # Generate Swagger docs
 ```
-
-**MySQL:**
-
-```env
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_DATABASE=shortmesh
-MYSQL_USERNAME=root
-MYSQL_PASSWORD=yourpassword
-```
-
-Note: If `SQLITE_DB_PATH` is set, SQLite will be used. Otherwise, MySQL is required.
 
 ### Migrations
 
-```env
-AUTO_MIGRATE=true            # Run pending migrations on app start
-AUTO_CREATE_TABLES=true      # Create all tables on first run using GORM AutoMigrate
-```
-
-**Production:** Set both to `false` and run migrations manually via `make migrate-up`
-
-### Security
-
-#### Cryptographic Keys
-
-Generate secure 32-byte base64-encoded keys:
-
 ```bash
-# Linux/Mac
-openssl rand -base64 32
+make migrate-up       # Run pending
+make migrate-down     # Rollback last
+make migrate-status   # Show status
+make migrate-fresh    # Drop & recreate
 ```
 
-```env
-ENCRYPTION_KEY=<base64-key-here>  # For AES-256-GCM encryption
-HASH_KEY=<base64-key-here>        # For HMAC-SHA256 hashing
-```
-
-**Important:** All three keys must be base64-encoded 32-byte keys. Generate three separate keys.
-
-## Commands
-
-```bash
-make run              # Start API server
-make build            # Build binaries 
-make test             # Run tests
-make docs             # Generate Swagger documentation
-
-# Migrations
-make migrate-up       # Run pending migrations
-make migrate-down     # Rollback last migration
-make migrate-status   # Show migration status
-make migrate-fresh    # Drop all and recreate
-```
+See [Migration Guide](docs/MIGRATIONS.md) for details.
 
 ## API Documentation
 
-Swagger UI is available at `http://localhost:8080/docs/index.html` when the server is running.
+Swagger UI: `http://localhost:8080/docs/index.html`
 
-To regenerate Swagger documentation after making changes to API endpoints:
+Regenerate: `make docs`
 
-```bash
-make docs
-```
+## Resources
 
-## References
-
-- [Migration Guide](migrations/README.md) - Creating and managing database migrations
+- [Migration Guide](docs/MIGRATIONS.md)
