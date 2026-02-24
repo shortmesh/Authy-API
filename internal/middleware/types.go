@@ -5,8 +5,7 @@ import "authy-api/internal/database"
 type AuthMethod string
 
 const (
-	AuthMethodSession AuthMethod = "session"
-	AuthMethodAPIKey  AuthMethod = "apikey"
+	AuthMethodBasicAuth AuthMethod = "basicauth"
 )
 
 type AuthMiddleware struct {

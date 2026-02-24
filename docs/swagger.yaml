@@ -1,4 +1,35 @@
 definitions:
+  otp.ErrorResponse:
+    properties:
+      error:
+        example: message
+        type: string
+    type: object
+  otp.GenerateOTPRequest:
+    properties:
+      identifier:
+        example: "237123456780"
+        type: string
+      platform:
+        example: wa
+        type: string
+      sender:
+        example: "237123456789"
+        type: string
+    required:
+    - identifier
+    - platform
+    - sender
+    type: object
+  otp.GenerateOTPResponse:
+    properties:
+      expires_at:
+        example: "2026-02-19T20:30:00Z"
+        type: string
+      message:
+        example: OTP sent successfully
+        type: string
+    type: object
   users.CreateUserRequest:
     properties:
       email:
@@ -34,10 +65,10 @@ definitions:
   users.UserResponse:
     properties:
       client_id:
-        example: 1234567890abcdef
+        example: CYDD4YLEmwQ3TCiSFidaFQ==
         type: string
       client_secret:
-        example: abcdef12345678901234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+        example: ux5Wa2P790vyHTzeaKWQkpfUb0BNGA7qQkz5JnH4k-Y=
         type: string
       message:
         example: User created successfully
@@ -117,12 +148,42 @@ paths:
       summary: Create a new user
       tags:
       - auth
+  /api/v1/otp/generate:
+    post:
+      consumes:
+      - application/json
+      description: Generate a secure OTP code and send it to the specified identifier
+        via the interface API
+      parameters:
+      - description: OTP generation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/otp.GenerateOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OTP sent successfully
+          schema:
+            $ref: '#/definitions/otp.GenerateOTPResponse'
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/otp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/otp.ErrorResponse'
+      security:
+      - BasicAuth: []
+      summary: Generate and send OTP
+      tags:
+      - otp
 schemes:
 - http
 securityDefinitions:
-  BearerAuth:
-    description: 'Enter your token in the format: Bearer {token}'
-    in: header
-    name: Authorization
-    type: apiKey
+  BasicAuth:
+    type: basic
 swagger: "2.0"

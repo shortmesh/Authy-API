@@ -31,6 +31,7 @@ Server: `http://localhost:8080`
 ## Configuration
 
 > [!NOTE]
+>
 > `.env.default` contains operational default values. Only modify if you know what you're doing.
 
 Copy `.env.example` to `.env` and configure as needed:
@@ -40,9 +41,30 @@ cp .env.example .env
 # Or use: make setup (auto-generates keys)
 ```
 
+### Required Environment Variables
+
+The following environment variables **must** be set for the application to function properly:
+
+#### Cryptographic Keys
+
+> [!NOTE]
+>
+> If you already used `make setup`, these keys are auto-generated and set in your `.env` file. Do not change them unless you know what you're doing, as changing these keys will invalidate existing data.
+
+- `ENCRYPTION_KEY` - Base64-encoded 32-byte key for encrypting sensitive data
+- `HASH_KEY` - Base64-encoded 32-byte key for hashing data
+
+Generate with: `openssl rand -base64 32`
+
+#### Interface API
+
+- `INTERFACE_API_URL` - URL of the Interface API service (e.g., `http://localhost:8080`)
+- `INTERFACE_API_KEY` - API key for authenticating with the Interface API
+
 See `.env.example` for all available options.
 
 > [!WARNING]
+>
 > **Production:** Set `AUTO_MIGRATE=false` and `AUTO_CREATE_TABLES=false`, then run `make migrate-up`.
 
 ## Development

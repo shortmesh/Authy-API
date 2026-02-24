@@ -13,16 +13,15 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// @title Shortmesh - Authy API
-// @version 1.0
-// @description API for ShortMesh Authy service
+//	@title			Shortmesh - Authy API
+//	@version		1.0
+//	@description	API for ShortMesh Authy service
 
-// @schemes http
+//	@schemes	http
 
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Enter your token in the format: Bearer {token}
+//	@securityDefinitions.basic	BasicAuth
+//	@in							header
+//	@name						Authorization
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

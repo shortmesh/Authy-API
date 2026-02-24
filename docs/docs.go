@@ -118,9 +118,104 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/otp/generate": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Generate a secure OTP code and send it to the specified identifier via the interface API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "otp"
+                ],
+                "summary": "Generate and send OTP",
+                "parameters": [
+                    {
+                        "description": "OTP generation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/otp.GenerateOTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OTP sent successfully",
+                        "schema": {
+                            "$ref": "#/definitions/otp.GenerateOTPResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/otp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/otp.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "otp.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "message"
+                }
+            }
+        },
+        "otp.GenerateOTPRequest": {
+            "type": "object",
+            "required": [
+                "identifier",
+                "platform",
+                "sender"
+            ],
+            "properties": {
+                "identifier": {
+                    "type": "string",
+                    "example": "237123456780"
+                },
+                "platform": {
+                    "type": "string",
+                    "example": "wa"
+                },
+                "sender": {
+                    "type": "string",
+                    "example": "237123456789"
+                }
+            }
+        },
+        "otp.GenerateOTPResponse": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string",
+                    "example": "2026-02-19T20:30:00Z"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "OTP sent successfully"
+                }
+            }
+        },
         "users.CreateUserRequest": {
             "type": "object",
             "required": [
@@ -171,11 +266,11 @@ const docTemplate = `{
             "properties": {
                 "client_id": {
                     "type": "string",
-                    "example": "1234567890abcdef"
+                    "example": "CYDD4YLEmwQ3TCiSFidaFQ=="
                 },
                 "client_secret": {
                     "type": "string",
-                    "example": "abcdef12345678901234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+                    "example": "ux5Wa2P790vyHTzeaKWQkpfUb0BNGA7qQkz5JnH4k-Y="
                 },
                 "message": {
                     "type": "string",
@@ -185,11 +280,8 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "BearerAuth": {
-            "description": "Enter your token in the format: Bearer {token}",
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
+        "BasicAuth": {
+            "type": "basic"
         }
     }
 }`

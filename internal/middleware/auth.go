@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/base64"
 	"net/http"
 	"runtime/debug"
 	"slices"
@@ -15,7 +16,7 @@ import (
 
 func (a *AuthMiddleware) Authenticate(methods ...AuthMethod) echo.MiddlewareFunc {
 	if len(methods) == 0 {
-		methods = []AuthMethod{AuthMethodSession}
+		methods = []AuthMethod{AuthMethodBasicAuth}
 	}
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -33,23 +34,20 @@ func (a *AuthMiddleware) Authenticate(methods ...AuthMethod) echo.MiddlewareFunc
 			}
 
 			scheme := strings.ToLower(parts[0])
-			_ = parts[1]
-
-			if scheme != "bearer" {
-				logger.Log.Errorf("Unsupported authorization scheme: %s", scheme)
-				return echo.NewHTTPError(http.StatusUnauthorized, "unsupported authorization scheme")
-			}
+			credentials := parts[1]
 
 			var user *models.User
 			var err error
 
+			if scheme == "basic" && isMethodAllowed(methods, AuthMethodBasicAuth) {
+				user, err = a.authenticateBasicAuth(credentials)
+			} else {
+				logger.Log.Errorf("Unsupported or disallowed authorization scheme: %s", scheme)
+				return echo.NewHTTPError(http.StatusUnauthorized, "unsupported authorization scheme")
+			}
+
 			if err != nil {
-				if err == gorm.ErrRecordNotFound {
-					logger.Log.Error("Invalid or expired token")
-					return echo.NewHTTPError(http.StatusUnauthorized, "invalid or expired token")
-				}
-				logger.Log.Errorf("Failed to authenticate:\n%v\n\n%s", err, debug.Stack())
-				return echo.NewHTTPError(http.StatusInternalServerError, "authentication failed")
+				return err
 			}
 
 			c.Set("user", user)
@@ -57,6 +55,41 @@ func (a *AuthMiddleware) Authenticate(methods ...AuthMethod) echo.MiddlewareFunc
 			return next(c)
 		}
 	}
+}
+
+func (a *AuthMiddleware) authenticateBasicAuth(credentials string) (*models.User, error) {
+	decoded, err := base64.StdEncoding.DecodeString(credentials)
+	if err != nil {
+		logger.Log.Error("Invalid base64 encoding in credentials")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials format")
+	}
+
+	credParts := strings.SplitN(string(decoded), ":", 2)
+	if len(credParts) != 2 {
+		logger.Log.Error("Invalid credentials format")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials format")
+	}
+
+	clientID := credParts[0]
+	clientSecret := credParts[1]
+
+	var user models.User
+	err = a.db.DB().Where("client_id = ?", clientID).First(&user).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			logger.Log.Error("Invalid credentials")
+			return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
+		}
+		logger.Log.Errorf("Failed to authenticate:\n%v\n\n%s", err, debug.Stack())
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, "authentication failed")
+	}
+
+	if err = user.CompareClientSecret(clientSecret); err != nil {
+		logger.Log.Error("Invalid credentials")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
+	}
+
+	return &user, nil
 }
 
 func isMethodAllowed(allowedMethods []AuthMethod, method AuthMethod) bool {

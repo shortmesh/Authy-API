@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"authy-api/internal/database"
+	"authy-api/internal/database/models"
+	"authy-api/pkg/logger"
 )
 
 type Server struct {
@@ -21,6 +23,27 @@ func NewServer() *http.Server {
 		port: port,
 		db:   database.New(),
 	}
+
+	cleanupInterval := 1 * time.Hour
+	if intervalStr := os.Getenv("OTP_CLEANUP_INTERVAL"); intervalStr != "" {
+		if interval, err := time.ParseDuration(intervalStr); err == nil && interval > 0 {
+			cleanupInterval = interval
+		}
+	}
+
+	go func() {
+		ticker := time.NewTicker(cleanupInterval)
+		defer ticker.Stop()
+
+		logger.Log.Infof("Started OTP cleanup routine with interval: %s", cleanupInterval)
+		for range ticker.C {
+			if err := models.CleanupExpiredOTPs(NewServer.db.DB()); err != nil {
+				logger.Log.Errorf("Failed to cleanup expired OTPs: %v", err)
+			} else {
+				logger.Log.Info("Expired OTPs cleaned up successfully")
+			}
+		}
+	}()
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%d", NewServer.port),
