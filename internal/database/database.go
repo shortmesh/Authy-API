@@ -24,9 +24,22 @@ type service struct {
 
 var dbInstance *service
 
-func New() Service {
+type Options struct {
+	AutoMigrate     bool
+	AutoCreateTable bool
+}
+
+func New(opts ...Options) Service {
 	if dbInstance != nil {
 		return dbInstance
+	}
+
+	var options Options
+	if len(opts) > 0 {
+		options = opts[0]
+	} else {
+		options.AutoMigrate = os.Getenv("AUTO_MIGRATE") == "true"
+		options.AutoCreateTable = os.Getenv("AUTO_CREATE_TABLES") == "true"
 	}
 
 	dbname := os.Getenv("MYSQL_DATABASE")
@@ -84,9 +97,8 @@ func New() Service {
 		db: db,
 	}
 
-	autoMigrate := os.Getenv("AUTO_MIGRATE")
-	if autoMigrate == "true" {
-		if err := dbInstance.AutoMigrate(); err != nil {
+	if options.AutoMigrate {
+		if err := dbInstance.AutoMigrate(options.AutoCreateTable); err != nil {
 			logger.Log.Fatalf("Database migration failed: %v", err)
 		}
 	}

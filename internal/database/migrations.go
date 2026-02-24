@@ -1,8 +1,6 @@
 package database
 
 import (
-	"os"
-
 	"authy-api/internal/database/models"
 	"authy-api/migrations"
 	"authy-api/pkg/logger"
@@ -39,9 +37,8 @@ func (s *service) RunMigrations() error {
 	return nil
 }
 
-func (s *service) AutoMigrate() error {
-	autoCreateTables := os.Getenv("AUTO_CREATE_TABLES")
-	if autoCreateTables == "true" {
+func (s *service) AutoMigrate(createTables bool) error {
+	if createTables {
 		if err := s.CreateTables(); err != nil {
 			return err
 		}

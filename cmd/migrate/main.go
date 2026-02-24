@@ -21,13 +21,13 @@ func main() {
 		steps  int
 	)
 
-	flag.StringVar(&action, "action", "up", "Migration action: up, down, fresh, status")
+	flag.StringVar(&action, "action", "up", "Migration action: up, down, status")
 	flag.IntVar(&steps, "steps", 1, "Number of migrations to rollback (only for 'down' action)")
 	flag.Parse()
 
 	logger.Log.Infof("Migration action: %s", action)
 
-	db := database.New()
+	db := database.New(database.Options{AutoMigrate: false, AutoCreateTable: false})
 	scripts := migrations.GetAllMigrations()
 	manager := migrator.NewManager(db.DB(), scripts)
 
@@ -37,12 +37,10 @@ func main() {
 		err = manager.Up()
 	case "down":
 		err = manager.Down(steps)
-	case "fresh":
-		err = manager.Fresh()
 	case "status":
 		err = manager.Status()
 	default:
-		logger.Log.Fatalf("Invalid action: %s. Use: up, down, fresh, or status", action)
+		logger.Log.Fatalf("Invalid action: %s. Use: up, down, or status", action)
 	}
 
 	if err != nil {
@@ -57,14 +55,13 @@ func init() {
 		fmt.Fprintf(os.Stderr, "Usage: migrate [options]\n\n")
 		fmt.Fprintf(os.Stderr, "Options:\n")
 		fmt.Fprintf(os.Stderr, "  -action string\n")
-		fmt.Fprintf(os.Stderr, "        Migration action: up, down, fresh, status (default \"up\")\n")
+		fmt.Fprintf(os.Stderr, "        Migration action: up, down, status (default \"up\")\n")
 		fmt.Fprintf(os.Stderr, "  -steps int\n")
 		fmt.Fprintf(os.Stderr, "        Number of migrations to rollback (default 1, only for 'down' action)\n\n")
 		fmt.Fprintf(os.Stderr, "Examples:\n")
 		fmt.Fprintf(os.Stderr, "  migrate -action=up                    # Run all pending migrations\n")
 		fmt.Fprintf(os.Stderr, "  migrate -action=down -steps=1         # Rollback last migration\n")
 		fmt.Fprintf(os.Stderr, "  migrate -action=down -steps=3         # Rollback last 3 migrations\n")
-		fmt.Fprintf(os.Stderr, "  migrate -action=fresh                 # Drop all tables and recreate\n")
 		fmt.Fprintf(os.Stderr, "  migrate -action=status                # Show migration status\n\n")
 		fmt.Fprintf(os.Stderr, "Environment Variables:\n")
 		fmt.Fprintf(os.Stderr, "  AUTO_MIGRATE=true                     # Auto-run migrations on app start\n")
