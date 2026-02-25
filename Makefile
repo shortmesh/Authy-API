@@ -56,6 +56,7 @@ migrate-status:
 docs:
 	@echo "Generating Swagger documentation..."
 	@which swag > /dev/null || (echo "Error: swag is not installed." && echo "Install it with: go install github.com/swaggo/swag/cmd/swag@latest" && exit 1)
+	@swag fmt
 	@swag init -g cmd/api/main.go -o docs
 
 clean:
