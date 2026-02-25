@@ -16,6 +16,14 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+var (
+	ErrOTPNotFound        = errors.New("OTP not found")
+	ErrOTPExpired         = errors.New("OTP has expired")
+	ErrOTPInvalidCode     = errors.New("invalid OTP code")
+	ErrOTPTooManyAttempts = errors.New("too many attempts")
+	ErrOTPInvalidated     = errors.New("OTP was invalidated")
+)
+
 type OTP struct {
 	ID           uint      `gorm:"primaryKey"`
 	UserID       uint      `gorm:"not null;uniqueIndex:idx_otp_unique,priority:1"`
@@ -131,11 +139,18 @@ func CreateOTP(db *gorm.DB, userID uint, identifier, platform, sender string) (s
 func VerifyOTP(db *gorm.DB, userID uint, identifier, platform, sender, code string) error {
 	var otp OTP
 	err := db.Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).
-		Where("user_id = ? AND identifier = ? AND platform = ? AND sender = ? AND expires_at > ?",
-			userID, identifier, platform, sender, time.Now().UTC()).
-		Order("created_at DESC").First(&otp).Error
+		Where("user_id = ? AND identifier = ? AND platform = ? AND sender = ?",
+			userID, identifier, platform, sender).First(&otp).Error
 	if err != nil {
-		return errors.New("invalid or expired OTP")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrOTPNotFound
+		}
+		return fmt.Errorf("database error: %w", err)
+	}
+
+	if otp.ExpiresAt.Before(time.Now().UTC()) {
+		db.Delete(&otp)
+		return ErrOTPExpired
 	}
 
 	if err := db.Model(&otp).Update("attempt_count", gorm.Expr("attempt_count + 1")).Error; err != nil {
@@ -144,18 +159,18 @@ func VerifyOTP(db *gorm.DB, userID uint, identifier, platform, sender, code stri
 
 	if err := db.First(&otp, otp.ID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("OTP was invalidated or expired during verification")
+			return ErrOTPInvalidated
 		}
-		return err
+		return fmt.Errorf("database error: %w", err)
 	}
 
 	if otp.AttemptCount > otp.MaxAttempts {
 		db.Delete(&otp)
-		return errors.New("too many attempts, please request a new code")
+		return ErrOTPTooManyAttempts
 	}
 
 	if err := otp.CompareCode(code); err != nil {
-		return errors.New("invalid code")
+		return ErrOTPInvalidCode
 	}
 
 	db.Delete(&otp)

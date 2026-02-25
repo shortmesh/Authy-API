@@ -169,6 +169,69 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/otp/verify": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "Verify an OTP code for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "otp"
+                ],
+                "summary": "Verify OTP",
+                "parameters": [
+                    {
+                        "description": "OTP verification request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/otp.VerifyOTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OTP verified successfully",
+                        "schema": {
+                            "$ref": "#/definitions/otp.VerifyOTPResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/otp.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/otp.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "TooManyRequests",
+                        "schema": {
+                            "$ref": "#/definitions/otp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/otp.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -213,6 +276,42 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "OTP sent successfully"
+                }
+            }
+        },
+        "otp.VerifyOTPRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "identifier",
+                "platform",
+                "sender"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "identifier": {
+                    "type": "string",
+                    "example": "237123456780"
+                },
+                "platform": {
+                    "type": "string",
+                    "example": "wa"
+                },
+                "sender": {
+                    "type": "string",
+                    "example": "237123456789"
+                }
+            }
+        },
+        "otp.VerifyOTPResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "OTP verified successfully"
                 }
             }
         },

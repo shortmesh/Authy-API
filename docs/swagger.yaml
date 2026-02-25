@@ -30,6 +30,32 @@ definitions:
         example: OTP sent successfully
         type: string
     type: object
+  otp.VerifyOTPRequest:
+    properties:
+      code:
+        example: "123456"
+        type: string
+      identifier:
+        example: "237123456780"
+        type: string
+      platform:
+        example: wa
+        type: string
+      sender:
+        example: "237123456789"
+        type: string
+    required:
+    - code
+    - identifier
+    - platform
+    - sender
+    type: object
+  otp.VerifyOTPResponse:
+    properties:
+      message:
+        example: OTP verified successfully
+        type: string
+    type: object
   users.CreateUserRequest:
     properties:
       email:
@@ -179,6 +205,46 @@ paths:
       security:
       - BasicAuth: []
       summary: Generate and send OTP
+      tags:
+      - otp
+  /api/v1/otp/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify an OTP code for the authenticated user
+      parameters:
+      - description: OTP verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/otp.VerifyOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OTP verified successfully
+          schema:
+            $ref: '#/definitions/otp.VerifyOTPResponse'
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/otp.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/otp.ErrorResponse'
+        "429":
+          description: TooManyRequests
+          schema:
+            $ref: '#/definitions/otp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/otp.ErrorResponse'
+      security:
+      - BasicAuth: []
+      summary: Verify OTP
       tags:
       - otp
 schemes:

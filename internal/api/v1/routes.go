@@ -20,4 +20,5 @@ func RegisterRoutes(g *echo.Group, db database.Service) {
 
 	// OTP routes
 	g.POST("/otp/generate", otpHandler.Generate, auth.Authenticate())
+	g.POST("/otp/verify", otpHandler.Verify, auth.Authenticate())
 }
