@@ -232,6 +232,49 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/platforms": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "List all available platforms and their senders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platforms"
+                ],
+                "summary": "List available platforms",
+                "responses": {
+                    "200": {
+                        "description": "List of platforms retrieved successfully",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/platforms.Platform"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/platforms.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/platforms.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -312,6 +355,28 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "OTP verified successfully"
+                }
+            }
+        },
+        "platforms.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "message"
+                }
+            }
+        },
+        "platforms.Platform": {
+            "type": "object",
+            "properties": {
+                "platform": {
+                    "type": "string",
+                    "example": "wa"
+                },
+                "sender": {
+                    "type": "string",
+                    "example": "237123456789"
                 }
             }
         },

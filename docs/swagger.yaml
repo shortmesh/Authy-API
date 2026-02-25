@@ -56,6 +56,21 @@ definitions:
         example: OTP verified successfully
         type: string
     type: object
+  platforms.ErrorResponse:
+    properties:
+      error:
+        example: message
+        type: string
+    type: object
+  platforms.Platform:
+    properties:
+      platform:
+        example: wa
+        type: string
+      sender:
+        example: "237123456789"
+        type: string
+    type: object
   users.CreateUserRequest:
     properties:
       email:
@@ -247,6 +262,33 @@ paths:
       summary: Verify OTP
       tags:
       - otp
+  /api/v1/platforms:
+    get:
+      consumes:
+      - application/json
+      description: List all available platforms and their senders
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of platforms retrieved successfully
+          schema:
+            items:
+              $ref: '#/definitions/platforms.Platform'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/platforms.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/platforms.ErrorResponse'
+      security:
+      - BasicAuth: []
+      summary: List available platforms
+      tags:
+      - platforms
 schemes:
 - http
 securityDefinitions:
