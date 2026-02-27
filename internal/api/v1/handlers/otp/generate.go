@@ -2,6 +2,7 @@ package otp
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -33,34 +34,34 @@ import (
 func (h *OTPHandler) Generate(c echo.Context) error {
 	user, ok := c.Get("user").(*models.User)
 	if !ok {
-		logger.Log.Error("User not found in context")
+		logger.Error("User not found in context")
 		return echo.ErrUnauthorized
 	}
 
 	var req GenerateOTPRequest
 	if err := c.Bind(&req); err != nil {
-		logger.Log.Infof("OTP generation failed: invalid request body - %v", err)
+		logger.Info(fmt.Sprintf("OTP generation failed: invalid request body - %v", err))
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Invalid request body. Must be a JSON object.",
 		})
 	}
 
 	if strings.TrimSpace(req.Identifier) == "" {
-		logger.Log.Info("OTP generation failed: missing identifier")
+		logger.Info("OTP generation failed: missing identifier")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Missing required field: identifier",
 		})
 	}
 
 	if strings.TrimSpace(req.Platform) == "" {
-		logger.Log.Info("OTP generation failed: missing platform")
+		logger.Info("OTP generation failed: missing platform")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Missing required field: platform",
 		})
 	}
 
 	if strings.TrimSpace(req.Sender) == "" {
-		logger.Log.Info("OTP generation failed: missing sender")
+		logger.Info("OTP generation failed: missing sender")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Missing required field: sender",
 		})
@@ -77,7 +78,7 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 			tx, user.ID, req.Identifier, req.Platform, req.Sender,
 		)
 		if err != nil {
-			logger.Log.Errorf("Failed to create OTP: %v\n%s", err, debug.Stack())
+			logger.Error(fmt.Sprintf("Failed to create OTP: %v\n%s", err, debug.Stack()))
 			return err
 		}
 
@@ -85,7 +86,7 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 
 		interfaceClient, err := interfaceclient.New()
 		if err != nil {
-			logger.Log.Errorf("Failed to initialize interface client: %v\n%s", err, debug.Stack())
+			logger.Error(fmt.Sprintf("Failed to initialize interface client: %v\n%s", err, debug.Stack()))
 			return err
 		}
 
@@ -100,7 +101,7 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 
 		_, err = interfaceClient.SendMessage(sendReq)
 		if err != nil {
-			logger.Log.Errorf("Failed to send OTP message: %v\n%s", err, debug.Stack())
+			logger.Error(fmt.Sprintf("Failed to send OTP message: %v\n%s", err, debug.Stack()))
 			return err
 		}
 
@@ -117,7 +118,7 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 
-	logger.Log.Info("OTP sent successfully")
+	logger.Info("OTP sent successfully")
 	return c.JSON(http.StatusOK, GenerateOTPResponse{
 		Message:   "OTP sent successfully",
 		ExpiresAt: expiresAt.Format(time.RFC3339),

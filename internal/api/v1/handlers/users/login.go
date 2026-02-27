@@ -2,6 +2,7 @@ package users
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -28,21 +29,21 @@ import (
 func (h *UserHandler) Login(c echo.Context) error {
 	var req LoginRequest
 	if err := c.Bind(&req); err != nil {
-		logger.Log.Infof("Login failed: invalid request body - %v", err)
+		logger.Info(fmt.Sprintf("Login failed: invalid request body - %v", err))
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Invalid request body. Must be a JSON object.",
 		})
 	}
 
 	if strings.TrimSpace(req.Email) == "" {
-		logger.Log.Info("Login failed: missing email")
+		logger.Info("Login failed: missing email")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Missing required field: email",
 		})
 	}
 
 	if strings.TrimSpace(req.Password) == "" {
-		logger.Log.Info("Login failed: missing password")
+		logger.Info("Login failed: missing password")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Missing required field: password",
 		})
@@ -51,33 +52,33 @@ func (h *UserHandler) Login(c echo.Context) error {
 	user, err := models.FindUserByEmail(h.db.DB(), req.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			logger.Log.Info("Login failed: invalid credentials (user not found)")
+			logger.Info("Login failed: invalid credentials (user not found)")
 			return c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Error: "Invalid credentials",
 			})
 		}
-		logger.Log.Errorf("User lookup error: %v", err)
+		logger.Error(fmt.Sprintf("User lookup error: %v", err))
 		return echo.ErrInternalServerError
 	}
 
 	if err := user.ComparePassword(req.Password); err != nil {
-		logger.Log.Info("Login failed: invalid credentials (password mismatch)")
+		logger.Info("Login failed: invalid credentials (password mismatch)")
 		return c.JSON(http.StatusUnauthorized, ErrorResponse{
 			Error: "Invalid credentials",
 		})
 	}
 
 	if err := user.RecordLogin(h.db.DB()); err != nil {
-		logger.Log.Warnf("Last login update failed: %v", err)
+		logger.Warn(fmt.Sprintf("Last login update failed: %v", err))
 	}
 
 	clientSecret, err := user.GetClientSecret()
 	if err != nil {
-		logger.Log.Errorf("Client secret retrieval error: %v", err)
+		logger.Error(fmt.Sprintf("Client secret retrieval error: %v", err))
 		return echo.ErrInternalServerError
 	}
 
-	logger.Log.Info("User logged in successfully")
+	logger.Info("User logged in successfully")
 	return c.JSON(http.StatusOK, UserResponse{
 		Message:      "Login successful",
 		ClientID:     user.ClientID,

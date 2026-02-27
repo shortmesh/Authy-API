@@ -14,13 +14,20 @@ import (
 
 type Server struct {
 	port int
+	host string
 	db   database.Service
 }
 
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+
 	NewServer := &Server{
 		port: port,
+		host: host,
 		db:   database.New(),
 	}
 
@@ -35,18 +42,18 @@ func NewServer() *http.Server {
 		ticker := time.NewTicker(cleanupInterval)
 		defer ticker.Stop()
 
-		logger.Log.Infof("Started OTP cleanup routine with interval: %s", cleanupInterval)
+		logger.Info(fmt.Sprintf("Started OTP cleanup routine with interval: %s", cleanupInterval))
 		for range ticker.C {
 			if err := models.CleanupExpiredOTPs(NewServer.db.DB()); err != nil {
-				logger.Log.Errorf("Failed to cleanup expired OTPs: %v", err)
+				logger.Error(fmt.Sprintf("Failed to cleanup expired OTPs: %v", err))
 			} else {
-				logger.Log.Info("Expired OTPs cleaned up successfully")
+				logger.Info("Expired OTPs cleaned up successfully")
 			}
 		}
 	}()
 
 	server := &http.Server{
-		Addr:              fmt.Sprintf(":%d", NewServer.port),
+		Addr:              fmt.Sprintf("%s:%d", NewServer.host, NewServer.port),
 		Handler:           NewServer.RegisterRoutes(),
 		IdleTimeout:       time.Minute,
 		ReadTimeout:       10 * time.Second,

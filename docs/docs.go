@@ -455,7 +455,7 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
 	BasePath:         "",
-	Schemes:          []string{"http"},
+	Schemes:          []string{},
 	Title:            "Shortmesh - Authy API",
 	Description:      "API for ShortMesh Authy service",
 	InfoInstanceName: "swagger",

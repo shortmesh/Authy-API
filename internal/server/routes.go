@@ -1,18 +1,16 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"authy-api/docs"
 	v1 "authy-api/internal/api/v1"
-	"authy-api/pkg/logger"
-
-	_ "authy-api/docs"
-
-	echoSwagger "github.com/swaggo/echo-swagger"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -50,46 +48,19 @@ func (s *Server) RegisterRoutes() http.Handler {
 		LogLatency:  true,
 		LogError:    true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			if v.Status >= 500 {
-				logger.Log.Errorf(`%s - - [%s] "%s %s %s" %d %d "%s" "%s" %v`,
-					v.RemoteIP,
-					v.StartTime.Format("2006-01-02 15:04:05"),
-					v.Method,
-					v.URI,
-					c.Request().Proto,
-					v.Status,
-					v.ResponseSize,
-					c.Request().Referer(),
-					c.Request().UserAgent(),
-					v.Latency,
-				)
-			} else if v.Status >= 400 {
-				logger.Log.Warnf(`%s - - [%s] "%s %s %s" %d %d "%s" "%s" %v`,
-					v.RemoteIP,
-					v.StartTime.Format("2006-01-02 15:04:05"),
-					v.Method,
-					v.URI,
-					c.Request().Proto,
-					v.Status,
-					v.ResponseSize,
-					c.Request().Referer(),
-					c.Request().UserAgent(),
-					v.Latency,
-				)
-			} else {
-				logger.Log.Infof(`%s - - [%s] "%s %s %s" %d %d "%s" "%s" %v`,
-					v.RemoteIP,
-					v.StartTime.Format("2006-01-02 15:04:05"),
-					v.Method,
-					v.URI,
-					c.Request().Proto,
-					v.Status,
-					v.ResponseSize,
-					c.Request().Referer(),
-					c.Request().UserAgent(),
-					v.Latency,
-				)
-			}
+			logLine := fmt.Sprintf(`%s - - [%s] "%s %s %s" %d %d "%s" "%s" %v`,
+				v.RemoteIP,
+				v.StartTime.Format("2006-01-02 15:04:05"),
+				v.Method,
+				v.URI,
+				c.Request().Proto,
+				v.Status,
+				v.ResponseSize,
+				c.Request().Referer(),
+				c.Request().UserAgent(),
+				v.Latency,
+			)
+			fmt.Fprintln(os.Stdout, logLine)
 			return nil
 		},
 	}))
@@ -106,6 +77,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	e.GET("/docs/*", func(c echo.Context) error {
 		docs.SwaggerInfo.Host = c.Request().Host
+		scheme := "http"
+		if c.Request().TLS != nil || c.Request().Header.Get("X-Forwarded-Proto") == "https" {
+			scheme = "https"
+		}
+		docs.SwaggerInfo.Schemes = []string{scheme}
 		return echoSwagger.WrapHandler(c)
 	})
 

@@ -1,6 +1,7 @@
 package platforms
 
 import (
+	"fmt"
 	"net/http"
 	"runtime/debug"
 
@@ -25,13 +26,13 @@ import (
 func (h *PlatformHandler) List(c echo.Context) error {
 	interfaceClient, err := interfaceclient.New()
 	if err != nil {
-		logger.Log.Errorf("Failed to initialize interface client: %v\n%s", err, debug.Stack())
+		logger.Error(fmt.Sprintf("Failed to initialize interface client: %v\n%s", err, debug.Stack()))
 		return echo.ErrInternalServerError
 	}
 
 	devices, err := interfaceClient.ListDevices()
 	if err != nil {
-		logger.Log.Errorf("Failed to list devices: %v\n%s", err, debug.Stack())
+		logger.Error(fmt.Sprintf("Failed to list devices: %v\n%s", err, debug.Stack()))
 		return echo.ErrInternalServerError
 	}
 
@@ -43,6 +44,6 @@ func (h *PlatformHandler) List(c echo.Context) error {
 		})
 	}
 
-	logger.Log.Info("Platforms listed successfully")
+	logger.Info("Platforms listed successfully")
 	return c.JSON(http.StatusOK, platforms)
 }

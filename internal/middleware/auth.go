@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"runtime/debug"
 	"slices"
@@ -23,13 +24,13 @@ func (a *AuthMiddleware) Authenticate(methods ...AuthMethod) echo.MiddlewareFunc
 		return func(c echo.Context) error {
 			authHeader := c.Request().Header.Get("Authorization")
 			if authHeader == "" {
-				logger.Log.Error("Missing authorization header")
+				logger.Error("Missing authorization header")
 				return echo.NewHTTPError(http.StatusUnauthorized, "missing authorization header")
 			}
 
 			parts := strings.SplitN(authHeader, " ", 2)
 			if len(parts) != 2 {
-				logger.Log.Errorf("Invalid authorization header format: %s", authHeader)
+				logger.Error(fmt.Sprintf("Invalid authorization header format: %s", authHeader))
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid authorization header format")
 			}
 
@@ -42,7 +43,7 @@ func (a *AuthMiddleware) Authenticate(methods ...AuthMethod) echo.MiddlewareFunc
 			if scheme == "basic" && isMethodAllowed(methods, AuthMethodBasicAuth) {
 				user, err = a.authenticateBasicAuth(credentials)
 			} else {
-				logger.Log.Errorf("Unsupported or disallowed authorization scheme: %s", scheme)
+				logger.Error(fmt.Sprintf("Unsupported or disallowed authorization scheme: %s", scheme))
 				return echo.NewHTTPError(http.StatusUnauthorized, "unsupported authorization scheme")
 			}
 
@@ -60,13 +61,13 @@ func (a *AuthMiddleware) Authenticate(methods ...AuthMethod) echo.MiddlewareFunc
 func (a *AuthMiddleware) authenticateBasicAuth(credentials string) (*models.User, error) {
 	decoded, err := base64.StdEncoding.DecodeString(credentials)
 	if err != nil {
-		logger.Log.Error("Invalid base64 encoding in credentials")
+		logger.Error("Invalid base64 encoding in credentials")
 		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials format")
 	}
 
 	credParts := strings.SplitN(string(decoded), ":", 2)
 	if len(credParts) != 2 {
-		logger.Log.Error("Invalid credentials format")
+		logger.Error("Invalid credentials format")
 		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials format")
 	}
 
@@ -77,15 +78,15 @@ func (a *AuthMiddleware) authenticateBasicAuth(credentials string) (*models.User
 	err = a.db.DB().Where("client_id = ?", clientID).First(&user).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			logger.Log.Error("Invalid credentials")
+			logger.Error("Invalid credentials")
 			return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 		}
-		logger.Log.Errorf("Failed to authenticate:\n%v\n\n%s", err, debug.Stack())
+		logger.Error(fmt.Sprintf("Failed to authenticate:\n%v\n\n%s", err, debug.Stack()))
 		return nil, echo.NewHTTPError(http.StatusInternalServerError, "authentication failed")
 	}
 
 	if err = user.CompareClientSecret(clientSecret); err != nil {
-		logger.Log.Error("Invalid credentials")
+		logger.Error("Invalid credentials")
 		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 	}
 

@@ -289,8 +289,6 @@ paths:
       summary: List available platforms
       tags:
       - platforms
-schemes:
-- http
 securityDefinitions:
   BasicAuth:
     type: basic

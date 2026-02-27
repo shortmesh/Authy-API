@@ -24,8 +24,8 @@ setup:
 
 build:
 	@echo "Building..."
-	@go build -o bin/api cmd/api/main.go
-	@go build -o bin/migrate cmd/migrate/main.go
+	@CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o bin/api cmd/api/main.go
+	@CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o bin/migrate cmd/migrate/main.go
 
 run:
 	@go run cmd/api/main.go
@@ -44,10 +44,6 @@ migrate-up:
 migrate-down:
 	@echo "Rolling back last migration..."
 	@go run cmd/migrate/main.go -action=down -steps=1
-
-migrate-fresh:
-	@echo "Running fresh migrations..."
-	@go run cmd/migrate/main.go -action=fresh
 
 migrate-status:
 	@echo "Checking migration status..."

@@ -1,6 +1,7 @@
 package messagetemplate
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -21,7 +22,7 @@ func FormatOTPMessage(code, expiry string) string {
 	message = strings.ReplaceAll(message, "{{code}}", code)
 	message = strings.ReplaceAll(message, "{{expiry}}", expiry)
 
-	logger.Log.Debugf("Formatted OTP message: %s", message)
+	logger.Debug(fmt.Sprintf("Formatted OTP message: %s", message))
 
 	return message
 }
