@@ -21,23 +21,16 @@ import (
 // Generate godoc
 //
 //	@Summary		Generate and send OTP
-//	@Description	Generate a secure OTP code and send it to the specified identifier via the interface API
+//	@Description	Generate a secure OTP code and send it to the specified phone number via the interface API
 //	@Tags			otp
 //	@Accept			json
 //	@Produce		json
-//	@Security		BasicAuth
 //	@Param			request	body		GenerateOTPRequest	true	"OTP generation request"
 //	@Success		200		{object}	GenerateOTPResponse	"OTP sent successfully"
 //	@Failure		400		{object}	ErrorResponse		"Invalid request body or validation error"
 //	@Failure		500		{object}	ErrorResponse		"Internal server error"
 //	@Router			/api/v1/otp/generate [post]
 func (h *OTPHandler) Generate(c echo.Context) error {
-	user, ok := c.Get("user").(*models.User)
-	if !ok {
-		logger.Error("User not found in context")
-		return echo.ErrUnauthorized
-	}
-
 	var req GenerateOTPRequest
 	if err := c.Bind(&req); err != nil {
 		logger.Info(fmt.Sprintf("OTP generation failed: invalid request body - %v", err))
@@ -46,10 +39,10 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 		})
 	}
 
-	if strings.TrimSpace(req.Identifier) == "" {
-		logger.Info("OTP generation failed: missing identifier")
+	if strings.TrimSpace(req.PhoneNumber) == "" {
+		logger.Info("OTP generation failed: missing phone_number")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Error: "Missing required field: identifier",
+			Error: "Missing required field: phone_number",
 		})
 	}
 
@@ -60,10 +53,10 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 		})
 	}
 
-	if strings.TrimSpace(req.Sender) == "" {
-		logger.Info("OTP generation failed: missing sender")
+	if strings.TrimSpace(req.DeviceID) == "" {
+		logger.Info("OTP generation failed: missing device_id")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Error: "Missing required field: sender",
+			Error: "Missing required field: device_id",
 		})
 	}
 
@@ -75,9 +68,23 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 		var expiryStr string
 
 		otpCode, expiresAt, err = models.CreateOTP(
-			tx, user.ID, req.Identifier, req.Platform, req.Sender,
+			tx, req.PhoneNumber, req.Platform, req.DeviceID,
 		)
 		if err != nil {
+			if err == models.ErrInvalidPhoneNumber {
+				logger.Info(fmt.Sprintf("OTP generation failed: invalid phone_number format - %v", err))
+				return &handlers.TxError{
+					StatusCode: http.StatusBadRequest,
+					Message:    "phone_number must be a valid international phone number (e.g., +237123456780 or 237123456780)",
+				}
+			}
+			if err == models.ErrInvalidDeviceID {
+				logger.Info(fmt.Sprintf("OTP generation failed: invalid device_id format - %v", err))
+				return &handlers.TxError{
+					StatusCode: http.StatusBadRequest,
+					Message:    "device_id must be a valid international phone number (e.g., +237123456789 or 237123456789)",
+				}
+			}
 			logger.Error(fmt.Sprintf("Failed to create OTP: %v\n%s", err, debug.Stack()))
 			return err
 		}
@@ -93,8 +100,8 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 		messageText := messagetemplate.FormatOTPMessage(otpCode, expiryStr)
 
 		sendReq := &interfaceclient.SendMessageRequest{
-			DeviceID: req.Sender,
-			Contact:  req.Identifier,
+			DeviceID: req.DeviceID,
+			Contact:  req.PhoneNumber,
 			Platform: req.Platform,
 			Text:     messageText,
 		}

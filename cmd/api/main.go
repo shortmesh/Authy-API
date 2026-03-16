@@ -20,10 +20,6 @@ import (
 //	@version		1.0
 //	@description	API for Authy service
 
-//	@securityDefinitions.basic	BasicAuth
-//	@in							header
-//	@name						Authorization
-
 func gracefulShutdown(apiServer *http.Server, cw *cleanup.CleanupWorker, done chan bool) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

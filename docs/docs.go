@@ -15,118 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/auth/login": {
-            "post": {
-                "description": "Authenticate a user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "User login",
-                "parameters": [
-                    {
-                        "description": "Login credentials",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/users.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Login successful",
-                        "schema": {
-                            "$ref": "#/definitions/users.UserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request body or validation error",
-                        "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid credentials",
-                        "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/register": {
-            "post": {
-                "description": "Create a new user account.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Create a new user",
-                "parameters": [
-                    {
-                        "description": "User creation request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/users.CreateUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "User created successfully",
-                        "schema": {
-                            "$ref": "#/definitions/users.UserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request body or validation error",
-                        "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "User with email already exists",
-                        "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/otp/generate": {
             "post": {
-                "security": [
-                    {
-                        "BasicAuth": []
-                    }
-                ],
-                "description": "Generate a secure OTP code and send it to the specified identifier via the interface API",
+                "description": "Generate a secure OTP code and send it to the specified phone number via the interface API",
                 "consumes": [
                     "application/json"
                 ],
@@ -172,12 +63,7 @@ const docTemplate = `{
         },
         "/api/v1/otp/verify": {
             "post": {
-                "security": [
-                    {
-                        "BasicAuth": []
-                    }
-                ],
-                "description": "Verify an OTP code for the authenticated user",
+                "description": "Verify an OTP code",
                 "consumes": [
                     "application/json"
                 ],
@@ -235,12 +121,7 @@ const docTemplate = `{
         },
         "/api/v1/platforms": {
             "get": {
-                "security": [
-                    {
-                        "BasicAuth": []
-                    }
-                ],
-                "description": "List all available platforms and their senders",
+                "description": "List all available platforms and their device IDs",
                 "consumes": [
                     "application/json"
                 ],
@@ -259,12 +140,6 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/platforms.Platform"
                             }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/platforms.ErrorResponse"
                         }
                     },
                     "500": {
@@ -290,22 +165,22 @@ const docTemplate = `{
         "otp.GenerateOTPRequest": {
             "type": "object",
             "required": [
-                "identifier",
-                "platform",
-                "sender"
+                "device_id",
+                "phone_number",
+                "platform"
             ],
             "properties": {
-                "identifier": {
+                "device_id": {
                     "type": "string",
-                    "example": "237123456780"
+                    "example": "+237123456789"
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "+237123456780"
                 },
                 "platform": {
                     "type": "string",
                     "example": "wa"
-                },
-                "sender": {
-                    "type": "string",
-                    "example": "237123456789"
                 }
             }
         },
@@ -326,26 +201,26 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "code",
-                "identifier",
-                "platform",
-                "sender"
+                "device_id",
+                "phone_number",
+                "platform"
             ],
             "properties": {
                 "code": {
                     "type": "string",
                     "example": "123456"
                 },
-                "identifier": {
+                "device_id": {
                     "type": "string",
-                    "example": "237123456780"
+                    "example": "+237123456789"
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "+237123456780"
                 },
                 "platform": {
                     "type": "string",
                     "example": "wa"
-                },
-                "sender": {
-                    "type": "string",
-                    "example": "237123456789"
                 }
             }
         },
@@ -370,82 +245,15 @@ const docTemplate = `{
         "platforms.Platform": {
             "type": "object",
             "properties": {
+                "device_id": {
+                    "type": "string",
+                    "example": "+237123456789"
+                },
                 "platform": {
                     "type": "string",
                     "example": "wa"
-                },
-                "sender": {
-                    "type": "string",
-                    "example": "237123456789"
                 }
             }
-        },
-        "users.CreateUserRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "maxLength": 64,
-                    "minLength": 8,
-                    "example": "Validpassword123@!"
-                }
-            }
-        },
-        "users.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "message"
-                }
-            }
-        },
-        "users.LoginRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "Validpassword123@!"
-                }
-            }
-        },
-        "users.UserResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "string",
-                    "example": "CYDD4YLEmwQ3TCiSFidaFQ=="
-                },
-                "client_secret": {
-                    "type": "string",
-                    "example": "ux5Wa2P790vyHTzeaKWQkpfUb0BNGA7qQkz5JnH4k-Y="
-                },
-                "message": {
-                    "type": "string",
-                    "example": "User created successfully"
-                }
-            }
-        }
-    },
-    "securityDefinitions": {
-        "BasicAuth": {
-            "type": "basic"
         }
     }
 }`
