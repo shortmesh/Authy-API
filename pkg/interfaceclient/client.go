@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"authy-api/pkg/config"
 )
 
 type Client struct {
@@ -20,6 +22,10 @@ func New() (*Client, error) {
 	baseURL := os.Getenv("INTERFACE_API_URL")
 	if baseURL == "" {
 		return nil, fmt.Errorf("INTERFACE_API_URL environment variable is not set")
+	}
+
+	if err := config.ValidateExternalURL(baseURL, "INTERFACE_API_URL"); err != nil {
+		return nil, err
 	}
 
 	apiKey := os.Getenv("INTERFACE_API_KEY")

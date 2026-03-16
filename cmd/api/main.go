@@ -10,20 +10,21 @@ import (
 	"time"
 
 	"authy-api/internal/server"
+	"authy-api/pkg/cleanup"
 	"authy-api/pkg/logger"
 
 	"github.com/joho/godotenv"
 )
 
-//	@title			Shortmesh - Authy API
+//	@title			Authy API
 //	@version		1.0
-//	@description	API for ShortMesh Authy service
+//	@description	API for Authy service
 
 //	@securityDefinitions.basic	BasicAuth
 //	@in							header
 //	@name						Authorization
 
-func gracefulShutdown(apiServer *http.Server, done chan bool) {
+func gracefulShutdown(apiServer *http.Server, cw *cleanup.CleanupWorker, done chan bool) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -31,6 +32,10 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 
 	logger.Info("Shutting down gracefully, press Ctrl+C again to force")
 	stop()
+
+	if cw != nil {
+		cw.Stop()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -44,14 +49,23 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
-	godotenv.Load(".env.default", ".env")
+	godotenv.Load("default.env", ".env")
+
+	var cw *cleanup.CleanupWorker
+	if cleanup.IsEnabled() {
+		cw = cleanup.New()
+		cw.Start()
+	} else {
+		logger.Info("Cleanup worker disabled via CLEANUP_ENABLED=false")
+	}
+
 	srv := server.NewServer()
 
 	logger.Info(fmt.Sprintf("Starting server on %s", srv.Addr))
 
 	done := make(chan bool, 1)
 
-	go gracefulShutdown(srv, done)
+	go gracefulShutdown(srv, cw, done)
 
 	err := srv.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {

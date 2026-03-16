@@ -1,0 +1,32 @@
+[Unit]
+Description=Authy API Service
+After=network.target
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+[Service]
+Type=simple
+User=authy-api
+Group=authy-api
+WorkingDirectory=/opt/authy-api
+ExecStart=/opt/authy-api/bin/api
+Restart=on-failure
+RestartSec=5
+
+EnvironmentFile=/opt/authy-api/default.env
+EnvironmentFile=/opt/authy-api/.env
+Environment="XDG_CACHE_HOME=/opt/authy-api/.cache"
+Environment="GOCACHE=/opt/authy-api/.cache/go-build"
+Environment="GOMODCACHE=/opt/authy-api/.cache/go-mod"
+
+; Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/authy-api
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target

@@ -25,7 +25,6 @@ go run cmd/migrate/main.go -action=down -steps=3
 package versions
 
 import (
-  "authy-api/internal/database/models"
   "gorm.io/gorm"
 )
 
@@ -40,11 +39,19 @@ func (m Migration20260212_000002) Name() string {
 }
 
 func (m Migration20260212_000002) Up(db *gorm.DB) error {
-  return db.AutoMigrate(&models.Profile{})
+  return db.Exec(`
+    CREATE TABLE IF NOT EXISTS profiles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      created_at DATETIME NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `).Error
 }
 
 func (m Migration20260212_000002) Down(db *gorm.DB) error {
-  return db.Migrator().DropTable(&models.Profile{})
+  return db.Exec("DROP TABLE IF EXISTS profiles").Error
 }
 ```
 

@@ -1,8 +1,6 @@
 package versions
 
 import (
-	"authy-api/internal/database/models"
-
 	"gorm.io/gorm"
 )
 
@@ -17,9 +15,23 @@ func (m Migration20260224_000001) Name() string {
 }
 
 func (m Migration20260224_000001) Up(db *gorm.DB) error {
-	return db.AutoMigrate(&models.User{})
+	return db.Exec(`
+		CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			email_ciphertext BLOB NOT NULL,
+			email_hash BLOB NOT NULL UNIQUE,
+			password_hash TEXT NOT NULL,
+			is_verified INTEGER DEFAULT 0,
+			client_id TEXT NOT NULL,
+			client_secret_hash TEXT NOT NULL,
+			client_secret_ciphertext BLOB NOT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			last_login_at DATETIME
+		)
+	`).Error
 }
 
 func (m Migration20260224_000001) Down(db *gorm.DB) error {
-	return db.Migrator().DropTable(&models.User{})
+	return db.Exec("DROP TABLE IF EXISTS users").Error
 }

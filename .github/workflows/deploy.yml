@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: production
 
@@ -18,14 +18,26 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: "1.24"
+
+      - name: Install SQLCipher dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev libsqlcipher-dev
+
+      - name: Install swag
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Configure for production build
+        run: |
+          echo "DISABLE_DB_ENCRYPTION=false" > .env
 
       - name: Build binary
         run: |
           make build
 
       - name: Stop service
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
@@ -40,11 +52,24 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           source: "bin"
-          target: "/srv/Authy-API/"
+          target: "/opt/authy-api/"
           overwrite: true
 
+      - name: Clone/Update code
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            if [ -d ~/projects/Authy-API ]; then
+              cd ~/projects/Authy-API && git pull
+            else
+              git clone https://github.com/${{ github.repository }}.git ~/projects/Authy-API
+            fi
+
       - name: Start service
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}

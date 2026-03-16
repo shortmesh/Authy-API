@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "API for ShortMesh Authy service",
-        "title": "Shortmesh - Authy API",
+        "description": "API for Authy service",
+        "title": "Authy API",
         "contact": {},
         "version": "1.0"
     },

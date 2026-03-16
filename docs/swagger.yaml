@@ -117,8 +117,8 @@ definitions:
     type: object
 info:
   contact: {}
-  description: API for ShortMesh Authy service
-  title: Shortmesh - Authy API
+  description: API for Authy service
+  title: Authy API
   version: "1.0"
 paths:
   /api/v1/auth/login:
