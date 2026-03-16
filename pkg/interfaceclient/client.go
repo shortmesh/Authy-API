@@ -14,7 +14,7 @@ import (
 
 type Client struct {
 	baseURL    string
-	apiKey     string
+	token      string
 	httpClient *http.Client
 }
 
@@ -28,14 +28,14 @@ func New() (*Client, error) {
 		return nil, err
 	}
 
-	apiKey := os.Getenv("INTERFACE_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("INTERFACE_API_KEY environment variable is not set")
+	token := os.Getenv("INTERFACE_API_TOKEN")
+	if token == "" {
+		return nil, fmt.Errorf("INTERFACE_API_TOKEN environment variable is not set")
 	}
 
 	return &Client{
 		baseURL: baseURL,
-		apiKey:  apiKey,
+		token:   token,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -55,7 +55,7 @@ func (c *Client) SendMessage(req *SendMessageRequest) (*SendMessageResponse, err
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
+	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
@@ -87,7 +87,7 @@ func (c *Client) ListDevices() (ListDevicesResponse, error) {
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
+	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {

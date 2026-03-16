@@ -29,7 +29,9 @@ type Config struct {
 var appConfig *Config
 
 func init() {
-	godotenv.Load("default.env", ".env")
+	if os.Getenv("APP_MODE") != "production" {
+		godotenv.Load("default.env", ".env")
+	}
 	load()
 }
 

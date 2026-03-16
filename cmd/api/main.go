@@ -45,7 +45,9 @@ func gracefulShutdown(apiServer *http.Server, cw *cleanup.CleanupWorker, done ch
 }
 
 func main() {
-	godotenv.Load("default.env", ".env")
+	if os.Getenv("APP_MODE") != "production" {
+		godotenv.Load("default.env", ".env")
+	}
 
 	var cw *cleanup.CleanupWorker
 	if cleanup.IsEnabled() {
