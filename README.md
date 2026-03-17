@@ -5,6 +5,7 @@ The authentication service for OTP generation, delivery, and verification.
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [API Usage](#api-usage)
 - [Requirements](#requirements)
 - [Configuration](#configuration)
 - [Development](#development)
@@ -121,6 +122,10 @@ make migrate-status   # Show status
 
 See [Migration Guide](docs/MIGRATIONS.md) for details.
 
+## API Usage
+
+See [API Usage Guide](docs/USAGE.md) for endpoint examples and integration.
+
 ## API Documentation
 
 Swagger UI: `http://localhost:8080/docs/index.html`
@@ -129,5 +134,6 @@ Regenerate: `make docs`
 
 ## Resources
 
+- [API Usage Guide](docs/USAGE.md)
 - [Security & Environment Configuration](docs/SECURITY.md)
 - [Migration Guide](docs/MIGRATIONS.md)
