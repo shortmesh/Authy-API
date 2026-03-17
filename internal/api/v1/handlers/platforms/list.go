@@ -14,13 +14,11 @@ import (
 // List godoc
 //
 //	@Summary		List available platforms
-//	@Description	List all available platforms and their senders
+//	@Description	List all available platforms and their device IDs
 //	@Tags			platforms
 //	@Accept			json
 //	@Produce		json
-//	@Security		BasicAuth
 //	@Success		200	{object}	ListPlatformsResponse	"List of platforms retrieved successfully"
-//	@Failure		401	{object}	ErrorResponse			"Unauthorized"
 //	@Failure		500	{object}	ErrorResponse			"Internal server error"
 //	@Router			/api/v1/platforms [get]
 func (h *PlatformHandler) List(c echo.Context) error {
@@ -40,7 +38,7 @@ func (h *PlatformHandler) List(c echo.Context) error {
 	for _, device := range devices {
 		platforms = append(platforms, Platform{
 			Platform: device.Platform,
-			Sender:   device.DeviceID,
+			DeviceID: device.DeviceID,
 		})
 	}
 

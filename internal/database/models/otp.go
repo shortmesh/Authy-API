@@ -12,6 +12,7 @@ import (
 
 	"authy-api/pkg/crypto"
 
+	"github.com/nyaruka/phonenumbers"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -22,21 +23,19 @@ var (
 	ErrOTPInvalidCode     = errors.New("invalid OTP code")
 	ErrOTPTooManyAttempts = errors.New("too many attempts")
 	ErrOTPInvalidated     = errors.New("OTP was invalidated")
+	ErrInvalidPhoneNumber = errors.New("invalid phone number format")
+	ErrInvalidDeviceID    = errors.New("invalid device ID format")
 )
 
 type OTP struct {
-	ID           uint      `gorm:"primaryKey"`
-	UserID       uint      `gorm:"not null;uniqueIndex:idx_otp_unique,priority:1"`
-	CodeHash     []byte    `gorm:"type:binary(32);not null"`
-	Identifier   string    `gorm:"not null;uniqueIndex:idx_otp_unique,priority:2"`
-	Platform     string    `gorm:"not null;uniqueIndex:idx_otp_unique,priority:3"`
-	Sender       string    `gorm:"not null;uniqueIndex:idx_otp_unique,priority:4"`
-	ExpiresAt    time.Time `gorm:"not null;index"`
-	AttemptCount int       `gorm:"default:0;not null"`
-	MaxAttempts  int       `gorm:"default:3;not null"`
-	CreatedAt    time.Time `gorm:"not null"`
-
-	User User `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	ID           uint
+	CodeHash     []byte
+	PhoneNumber  string
+	Platform     string
+	DeviceID     string
+	ExpiresAt    time.Time
+	AttemptCount int
+	CreatedAt    time.Time
 }
 
 func (OTP) TableName() string {
@@ -64,6 +63,28 @@ func (o *OTP) CompareCode(code string) error {
 	return nil
 }
 
+func ValidateE164PhoneNumber(phoneNumber string) error {
+	if phoneNumber == "" {
+		return ErrInvalidPhoneNumber
+	}
+
+	inputNumber := phoneNumber
+	if phoneNumber[0] != '+' {
+		inputNumber = "+" + phoneNumber
+	}
+
+	num, err := phonenumbers.Parse(inputNumber, "")
+	if err != nil {
+		return ErrInvalidPhoneNumber
+	}
+
+	if !phonenumbers.IsValidNumber(num) {
+		return ErrInvalidPhoneNumber
+	}
+
+	return nil
+}
+
 func GenerateOTP(length int) (string, error) {
 	if length <= 0 {
 		length = 6
@@ -73,25 +94,31 @@ func GenerateOTP(length int) (string, error) {
 
 	n, err := rand.Int(rand.Reader, limit)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate OTP: %w", err)
+		return "", err
 	}
 
 	format := fmt.Sprintf("%%0%dd", length)
 	return fmt.Sprintf(format, n), nil
 }
 
-func CreateOTP(db *gorm.DB, userID uint, identifier, platform, sender string) (string, time.Time, error) {
-	maxAttempts := 3
-	if maxAttemptsStr := os.Getenv("OTP_MAX_ATTEMPTS"); maxAttemptsStr != "" {
-		if max, err := strconv.Atoi(maxAttemptsStr); err == nil && max > 0 {
-			maxAttempts = max
-		}
+func CreateOTP(db *gorm.DB, phoneNumber, platform, deviceID string) (string, time.Time, error) {
+	if err := ValidateE164PhoneNumber(phoneNumber); err != nil {
+		return "", time.Time{}, err
 	}
 
+	if err := ValidateE164PhoneNumber(deviceID); err != nil {
+		return "", time.Time{}, ErrInvalidDeviceID
+	}
 	otpLength := 6
 	if lengthStr := os.Getenv("OTP_LENGTH"); lengthStr != "" {
-		if length, err := strconv.Atoi(lengthStr); err == nil && length > 0 {
-			otpLength = length
+		if length, err := strconv.Atoi(lengthStr); err == nil {
+			if length < 6 {
+				otpLength = 6
+			} else if length > 12 {
+				otpLength = 12
+			} else {
+				otpLength = length
+			}
 		}
 	}
 
@@ -110,13 +137,11 @@ func CreateOTP(db *gorm.DB, userID uint, identifier, platform, sender string) (s
 	expiresAt := time.Now().UTC().Add(time.Duration(expiryMinutes) * time.Minute)
 
 	otp := &OTP{
-		UserID:       userID,
-		Identifier:   identifier,
+		PhoneNumber:  phoneNumber,
 		Platform:     platform,
-		Sender:       sender,
+		DeviceID:     deviceID,
 		ExpiresAt:    expiresAt,
 		AttemptCount: 0,
-		MaxAttempts:  maxAttempts,
 		CreatedAt:    time.Now().UTC(),
 	}
 
@@ -126,26 +151,39 @@ func CreateOTP(db *gorm.DB, userID uint, identifier, platform, sender string) (s
 
 	if err := db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{
-			{Name: "user_id"}, {Name: "identifier"}, {Name: "platform"}, {Name: "sender"},
+			{Name: "phone_number"}, {Name: "platform"}, {Name: "device_id"},
 		},
-		DoUpdates: clause.AssignmentColumns([]string{"code_hash", "expires_at", "attempt_count", "max_attempts", "created_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{"code_hash", "expires_at", "attempt_count", "created_at"}),
 	}).Create(otp).Error; err != nil {
-		return "", time.Time{}, fmt.Errorf("failed to create OTP: %w", err)
+		return "", time.Time{}, err
 	}
 
 	return code, expiresAt, nil
 }
 
-func VerifyOTP(db *gorm.DB, userID uint, identifier, platform, sender, code string) error {
+func VerifyOTP(db *gorm.DB, phoneNumber, platform, deviceID, code string) error {
+	if err := ValidateE164PhoneNumber(phoneNumber); err != nil {
+		return err
+	}
+
+	if err := ValidateE164PhoneNumber(deviceID); err != nil {
+		return ErrInvalidDeviceID
+	}
+	maxAttempts := 3
+	if maxAttemptsStr := os.Getenv("OTP_MAX_ATTEMPTS"); maxAttemptsStr != "" {
+		if max, err := strconv.Atoi(maxAttemptsStr); err == nil && max > 0 {
+			maxAttempts = max
+		}
+	}
+
 	var otp OTP
-	err := db.Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).
-		Where("user_id = ? AND identifier = ? AND platform = ? AND sender = ?",
-			userID, identifier, platform, sender).First(&otp).Error
+	err := db.Where("phone_number = ? AND platform = ? AND device_id = ?",
+		phoneNumber, platform, deviceID).First(&otp).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrOTPNotFound
 		}
-		return fmt.Errorf("database error: %w", err)
+		return err
 	}
 
 	if otp.ExpiresAt.Before(time.Now().UTC()) {
@@ -154,17 +192,17 @@ func VerifyOTP(db *gorm.DB, userID uint, identifier, platform, sender, code stri
 	}
 
 	if err := db.Model(&otp).Update("attempt_count", gorm.Expr("attempt_count + 1")).Error; err != nil {
-		return fmt.Errorf("failed to update attempts: %w", err)
+		return err
 	}
 
 	if err := db.First(&otp, otp.ID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrOTPInvalidated
 		}
-		return fmt.Errorf("database error: %w", err)
+		return err
 	}
 
-	if otp.AttemptCount > otp.MaxAttempts {
+	if otp.AttemptCount > maxAttempts {
 		db.Delete(&otp)
 		return ErrOTPTooManyAttempts
 	}
@@ -175,8 +213,4 @@ func VerifyOTP(db *gorm.DB, userID uint, identifier, platform, sender, code stri
 
 	db.Delete(&otp)
 	return nil
-}
-
-func CleanupExpiredOTPs(db *gorm.DB) error {
-	return db.Where("expires_at <= ?", time.Now().UTC()).Delete(&OTP{}).Error
 }

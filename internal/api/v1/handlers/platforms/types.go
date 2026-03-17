@@ -4,10 +4,10 @@ import (
 	"authy-api/internal/database"
 )
 
-// Platform represents a platform with its sender
+// Platform represents a platform with its device ID
 type Platform struct {
 	Platform string `json:"platform" example:"wa"`
-	Sender   string `json:"sender" example:"237123456789"`
+	DeviceID string `json:"device_id" example:"+237123456789"`
 }
 
 // ListPlatformsResponse represents the response for listing platforms

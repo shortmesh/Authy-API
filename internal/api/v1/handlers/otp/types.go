@@ -6,9 +6,9 @@ import (
 
 // GenerateOTPRequest represents the request body for generating an OTP
 type GenerateOTPRequest struct {
-	Identifier string `json:"identifier" example:"237123456780" validate:"required"`
-	Platform   string `json:"platform" example:"wa" validate:"required"`
-	Sender     string `json:"sender" example:"237123456789" validate:"required"`
+	PhoneNumber string `json:"phone_number" example:"+237123456780" validate:"required"`
+	Platform    string `json:"platform" example:"wa" validate:"required"`
+	DeviceID    string `json:"device_id" example:"+237123456789" validate:"required"`
 }
 
 // GenerateOTPResponse represents the response after generating an OTP
@@ -19,10 +19,10 @@ type GenerateOTPResponse struct {
 
 // VerifyOTPRequest represents the request body for verifying an OTP
 type VerifyOTPRequest struct {
-	Identifier string `json:"identifier" example:"237123456780" validate:"required"`
-	Platform   string `json:"platform" example:"wa" validate:"required"`
-	Sender     string `json:"sender" example:"237123456789" validate:"required"`
-	Code       string `json:"code" example:"123456" validate:"required"`
+	PhoneNumber string `json:"phone_number" example:"+237123456780" validate:"required"`
+	Platform    string `json:"platform" example:"wa" validate:"required"`
+	DeviceID    string `json:"device_id" example:"+237123456789" validate:"required"`
+	Code        string `json:"code" example:"123456" validate:"required"`
 }
 
 // VerifyOTPResponse represents the response after verifying an OTP

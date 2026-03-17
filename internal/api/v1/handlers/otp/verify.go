@@ -14,11 +14,10 @@ import (
 // Verify godoc
 //
 //	@Summary		Verify OTP
-//	@Description	Verify an OTP code for the authenticated user
+//	@Description	Verify an OTP code
 //	@Tags			otp
 //	@Accept			json
 //	@Produce		json
-//	@Security		BasicAuth
 //	@Param			request	body		VerifyOTPRequest	true	"OTP verification request"
 //	@Success		200		{object}	VerifyOTPResponse	"OTP verified successfully"
 //	@Failure		400		{object}	ErrorResponse		"Invalid request body or validation error"
@@ -27,12 +26,6 @@ import (
 //	@Failure		500		{object}	ErrorResponse		"Internal server error"
 //	@Router			/api/v1/otp/verify [post]
 func (h *OTPHandler) Verify(c echo.Context) error {
-	user, ok := c.Get("user").(*models.User)
-	if !ok {
-		logger.Error("User not found in context")
-		return echo.ErrUnauthorized
-	}
-
 	var req VerifyOTPRequest
 	if err := c.Bind(&req); err != nil {
 		logger.Info(fmt.Sprintf("OTP verification failed: invalid request body - %v", err))
@@ -41,10 +34,10 @@ func (h *OTPHandler) Verify(c echo.Context) error {
 		})
 	}
 
-	if strings.TrimSpace(req.Identifier) == "" {
-		logger.Info("OTP verification failed: missing identifier")
+	if strings.TrimSpace(req.PhoneNumber) == "" {
+		logger.Info("OTP verification failed: missing phone_number")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Error: "Missing required field: identifier",
+			Error: "Missing required field: phone_number",
 		})
 	}
 
@@ -55,10 +48,10 @@ func (h *OTPHandler) Verify(c echo.Context) error {
 		})
 	}
 
-	if strings.TrimSpace(req.Sender) == "" {
-		logger.Info("OTP verification failed: missing sender")
+	if strings.TrimSpace(req.DeviceID) == "" {
+		logger.Info("OTP verification failed: missing device_id")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Error: "Missing required field: sender",
+			Error: "Missing required field: device_id",
 		})
 	}
 
@@ -70,10 +63,20 @@ func (h *OTPHandler) Verify(c echo.Context) error {
 	}
 
 	err := models.VerifyOTP(
-		h.db.DB(), user.ID, req.Identifier, req.Platform, req.Sender, req.Code,
+		h.db.DB(), req.PhoneNumber, req.Platform, req.DeviceID, req.Code,
 	)
 	if err != nil {
 		switch err {
+		case models.ErrInvalidPhoneNumber:
+			logger.Info(fmt.Sprintf("OTP verification failed: %s", models.ErrInvalidPhoneNumber))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{
+				Error: "phone_number must be a valid international phone number (e.g., +237123456780 or 237123456780)",
+			})
+		case models.ErrInvalidDeviceID:
+			logger.Info(fmt.Sprintf("OTP verification failed: %s", models.ErrInvalidDeviceID))
+			return c.JSON(http.StatusBadRequest, ErrorResponse{
+				Error: "device_id must be a valid international phone number (e.g., +237123456789 or 237123456789)",
+			})
 		case models.ErrOTPNotFound:
 			logger.Error(fmt.Sprintf("OTP verification failed: %s", models.ErrOTPNotFound))
 			return c.JSON(http.StatusUnauthorized, ErrorResponse{
