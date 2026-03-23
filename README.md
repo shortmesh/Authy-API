@@ -4,13 +4,28 @@ The authentication service for OTP generation, delivery, and verification.
 
 ## Table of Contents
 
+- [Requirements](#requirements)
 - [Quick Start](#quick-start)
 - [API Usage](#api-usage)
-- [Requirements](#requirements)
 - [Configuration](#configuration)
 - [Development](#development)
 - [API Documentation](#api-documentation)
 - [Resources](#resources)
+
+## Requirements
+
+- Go 1.25.0+
+- SQLite (SQLCipher optional, see [Security](docs/SECURITY.md))
+- Interface-API - See [Interface-API repository](https://github.com/shortmesh/Interface-API#requirements) for setup instructions
+
+### Ubuntu/Debian Dependencies
+
+For SQLCipher support (encrypted database):
+
+```bash
+sudo apt-get update
+sudo apt-get install -y libsqlite3-dev libsqlcipher-dev
+```
 
 ## Quick Start
 
@@ -23,20 +38,6 @@ make run
 ```
 
 Server: `http://localhost:8080`
-
-## Requirements
-
-- Go 1.25.0+
-- SQLite (SQLCipher optional, see [Security](docs/SECURITY.md))
-
-### Ubuntu/Debian Dependencies
-
-For SQLCipher support (encrypted database):
-
-```bash
-sudo apt-get update
-sudo apt-get install -y libsqlite3-dev libsqlcipher-dev
-```
 
 ## Configuration
 
@@ -91,6 +92,9 @@ The following environment variables **must** be set for the application to funct
 - `DB_ENCRYPTION_KEY` - SQLCipher key (generate: `openssl rand -hex 32`, required if encryption enabled)
 
 #### Interface API
+
+> [!IMPORTANT]
+> The Interface API service must be set up and running before starting Authy-API. See [Interface-API repository](https://github.com/shortmesh/Interface-API) for setup instructions.
 
 - `INTERFACE_API_URL` - Interface API service URL
 - `INTERFACE_API_TOKEN` - Token for authenticating with Interface API
