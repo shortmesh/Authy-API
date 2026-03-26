@@ -6,8 +6,9 @@ The authentication service for OTP generation, delivery, and verification.
 
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
-- [API Usage](#api-usage)
+- [Docker Setup](#docker-setup)
 - [Configuration](#configuration)
+- [API Usage](#api-usage)
 - [Development](#development)
 - [API Documentation](#api-documentation)
 - [Resources](#resources)
@@ -39,18 +40,79 @@ make run
 
 Server: `http://localhost:8080`
 
-## Configuration
+## Docker Setup
 
-> [!NOTE]
->
-> `default.env` contains operational default values. Only modify if you know what you're doing.
+> [!IMPORTANT]
+> The Interface API service must be set up and running before starting Authy-API. See [Interface-API repository](https://github.com/shortmesh/Interface-API) for setup instructions.
 
-Copy `example.env` to `.env` and configure as needed:
+### Build and Run
 
 ```bash
-cp example.env .env
-# Or use: make setup (auto-generates keys)
+# Build
+docker build -t authy-api .
+
+# Run
+docker run -d --name authy-api -p 8080:8080 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/.env:/app/.env \
+  authy-api
+
+# View logs
+docker logs -f authy-api
 ```
+
+**If AUTO_MIGRATE is disabled**, run migrations first:
+
+```bash
+docker run --rm -v $(pwd)/data:/app/data -v $(pwd)/.env:/app/.env authy-api ./migrate -action=up
+```
+
+**For database encryption**, add build arg and configure `.env`:
+
+```bash
+docker build --build-arg ENABLE_DB_ENCRYPTION=true -t authy-api .
+```
+
+Set `DISABLE_DB_ENCRYPTION=false` and `DB_ENCRYPTION_KEY` in your `.env`.
+
+### Docker Compose
+
+> [!NOTE]
+> This configuration assumes Interface-API is running separately. Update `INTERFACE_API_URL` in your `.env` to point to the Interface-API service.
+
+```yaml
+version: '3.8'
+
+services:
+  migrate:
+    build: .
+    command: ./migrate -action=up
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env
+
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+    depends_on:
+      - migrate
+```
+
+```bash
+docker-compose up -d
+
+# View logs
+docker-compose logs -f api
+```
+
+## Configuration
 
 > [!TIP]
 > Use `make setup` to automatically generate secure cryptographic keys
