@@ -72,11 +72,6 @@ func (h *OTPHandler) Verify(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, ErrorResponse{
 				Error: "phone_number must be a valid international phone number (e.g., +237123456780 or 237123456780)",
 			})
-		case models.ErrInvalidDeviceID:
-			logger.Info(fmt.Sprintf("OTP verification failed: %s", models.ErrInvalidDeviceID))
-			return c.JSON(http.StatusBadRequest, ErrorResponse{
-				Error: "device_id must be a valid international phone number (e.g., +237123456789 or 237123456789)",
-			})
 		case models.ErrOTPNotFound:
 			logger.Error(fmt.Sprintf("OTP verification failed: %s", models.ErrOTPNotFound))
 			return c.JSON(http.StatusUnauthorized, ErrorResponse{

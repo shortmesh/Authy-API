@@ -24,7 +24,6 @@ var (
 	ErrOTPTooManyAttempts = errors.New("too many attempts")
 	ErrOTPInvalidated     = errors.New("OTP was invalidated")
 	ErrInvalidPhoneNumber = errors.New("invalid phone number format")
-	ErrInvalidDeviceID    = errors.New("invalid device ID format")
 )
 
 type OTP struct {
@@ -106,9 +105,6 @@ func CreateOTP(db *gorm.DB, phoneNumber, platform, deviceID string) (string, tim
 		return "", time.Time{}, err
 	}
 
-	if err := ValidateE164PhoneNumber(deviceID); err != nil {
-		return "", time.Time{}, ErrInvalidDeviceID
-	}
 	otpLength := 6
 	if lengthStr := os.Getenv("OTP_LENGTH"); lengthStr != "" {
 		if length, err := strconv.Atoi(lengthStr); err == nil {
@@ -166,9 +162,6 @@ func VerifyOTP(db *gorm.DB, phoneNumber, platform, deviceID, code string) error 
 		return err
 	}
 
-	if err := ValidateE164PhoneNumber(deviceID); err != nil {
-		return ErrInvalidDeviceID
-	}
 	maxAttempts := 3
 	if maxAttemptsStr := os.Getenv("OTP_MAX_ATTEMPTS"); maxAttemptsStr != "" {
 		if max, err := strconv.Atoi(maxAttemptsStr); err == nil && max > 0 {

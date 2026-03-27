@@ -78,13 +78,6 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 					Message:    "phone_number must be a valid international phone number (e.g., +237123456780 or 237123456780)",
 				}
 			}
-			if err == models.ErrInvalidDeviceID {
-				logger.Info(fmt.Sprintf("OTP generation failed: invalid device_id format - %v", err))
-				return &handlers.TxError{
-					StatusCode: http.StatusBadRequest,
-					Message:    "device_id must be a valid international phone number (e.g., +237123456789 or 237123456789)",
-				}
-			}
 			logger.Error(fmt.Sprintf("Failed to create OTP: %v\n%s", err, debug.Stack()))
 			return err
 		}
