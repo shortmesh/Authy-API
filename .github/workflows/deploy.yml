@@ -19,7 +19,6 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            source ~/.bashrc
             cd /opt/shortmesh/Authy-API
             git pull
             make build
