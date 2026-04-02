@@ -25,4 +25,4 @@ jobs:
             cd /opt/shortmesh/Authy-API
             git pull
             make build
-            sudo systemctl restart interface-api
+            sudo systemctl restart interface-api.service
