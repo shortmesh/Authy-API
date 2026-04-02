@@ -18,9 +18,11 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
+          script_stop: true
           script: |
-            export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
-            cd /opt/shortmesh/Authy-API
-            git pull
-            make build
-            sudo systemctl restart interface-api
+            bash -lc '
+              cd /opt/shortmesh/Authy-API
+              git pull
+              make build
+              sudo systemctl restart interface-api
+            '
