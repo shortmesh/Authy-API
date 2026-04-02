@@ -1,3 +1,6 @@
+SHELL := /bin/bash
+export PATH := $(PATH):/usr/local/go/bin:$(HOME)/go/bin
+
 all: build test
 
 setup:
