@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            export PATH=$PATH:$(go env GOPATH)/bin
+            source ~/.bashrc
             cd /opt/shortmesh/Authy-API
             git pull
             make build
