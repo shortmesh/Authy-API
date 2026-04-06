@@ -7,6 +7,7 @@ import (
 
 	"authy-api/docs"
 	v1 "authy-api/internal/api/v1"
+	"authy-api/pkg/web"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -87,6 +88,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	apiV1 := e.Group("/api/v1")
 	v1.RegisterRoutes(apiV1, s.db)
+
+	web.RegisterRoutes(e)
 
 	return e
 }

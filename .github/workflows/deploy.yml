@@ -24,5 +24,6 @@ jobs:
             export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
             cd /opt/shortmesh/Authy-API
             git pull
+            cd pkg/web && make install && make build && cd ../..
             make build
             sudo systemctl restart authy-api.service

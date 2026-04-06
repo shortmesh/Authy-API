@@ -9,6 +9,7 @@ The authentication service for OTP generation, delivery, and verification.
 - [Docker Setup](#docker-setup)
 - [Configuration](#configuration)
 - [API Usage](#api-usage)
+- [Demo UI](#demo-ui)
 - [Development](#development)
 - [API Documentation](#api-documentation)
 - [Resources](#resources)
@@ -191,6 +192,35 @@ See [Migration Guide](docs/MIGRATIONS.md) for details.
 ## API Usage
 
 See [API Usage Guide](docs/USAGE.md) for endpoint examples and integration.
+
+## Demo UI
+
+A live demo UI is available at `/demo` to test the OTP flow interactively.
+
+### Building the Demo
+
+The demo UI is a Vite-based React application located in `pkg/web/`. To build and serve it:
+
+```bash
+# Build the demo UI
+cd pkg/web
+make build
+
+# Build the API server (embeds the UI)
+cd ../..
+make build
+```
+
+The demo UI is automatically embedded into the API binary and served at `http://localhost:8080/demo`.
+
+### Demo Features
+
+- Phone number input with international format support
+- Platform selection (WhatsApp, Signal, Telegram)
+- OTP generation and delivery
+- OTP verification
+
+See [pkg/web/README.md](pkg/web/README.md) for detailed documentation on the demo UI.
 
 ## API Documentation
 
