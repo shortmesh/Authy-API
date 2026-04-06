@@ -6,13 +6,6 @@ setup:
 		echo "Creating .env from example.env..."; \
 		cp example.env .env; \
 	fi
-	@if ! grep -q "^HASH_KEY=[A-Za-z0-9+/=]\{40,\}" .env 2>/dev/null; then \
-		echo "Generating HASH_KEY..."; \
-		HASH_KEY=$$(openssl rand -base64 32); \
-		sed -i.bak "s|^HASH_KEY=.*|HASH_KEY=$$HASH_KEY|" .env && rm -f .env.bak; \
-	else \
-		echo "HASH_KEY already set"; \
-	fi
 	@if ! grep -q "^DB_ENCRYPTION_KEY=[A-Fa-f0-9]\{64,\}" .env 2>/dev/null; then \
 		echo "Generating DB_ENCRYPTION_KEY..."; \
 		DB_ENCRYPTION_KEY=$$(openssl rand -hex 32); \
@@ -106,9 +99,6 @@ setup-systemd:
 		sed -i "s|^SQLITE_DB_PATH=.*|SQLITE_DB_PATH=/opt/authy-api/data/authy.db|" /opt/authy-api/.env; \
 		sed -i "s|^DISABLE_DB_ENCRYPTION=.*|DISABLE_DB_ENCRYPTION=false|" /opt/authy-api/.env; \
 		sed -i "s|^AUTO_MIGRATE=.*|AUTO_MIGRATE=false|" /opt/authy-api/.env; \
-		echo "Generating HASH_KEY..."; \
-		HASH_KEY=$$(openssl rand -base64 32); \
-		sed -i "s|^HASH_KEY=.*|HASH_KEY=$$HASH_KEY|" /opt/authy-api/.env; \
 		echo "Generating DB_ENCRYPTION_KEY..."; \
 		DB_ENCRYPTION_KEY=$$(openssl rand -hex 32); \
 		sed -i "s|^DB_ENCRYPTION_KEY=.*|DB_ENCRYPTION_KEY=$$DB_ENCRYPTION_KEY|" /opt/authy-api/.env; \

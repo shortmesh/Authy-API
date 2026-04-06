@@ -88,9 +88,6 @@ func TestEncryptWithoutKey(t *testing.T) {
 }
 
 func TestHash(t *testing.T) {
-	testKey := "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-	os.Setenv("HASH_KEY", testKey)
-
 	tests := []struct {
 		name  string
 		data1 string
@@ -135,9 +132,6 @@ func TestHash(t *testing.T) {
 }
 
 func TestHashToBase64(t *testing.T) {
-	testKey := "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-	os.Setenv("HASH_KEY", testKey)
-
 	data := "test@example.com"
 
 	hash1, err := HashToBase64(data)

@@ -3,7 +3,6 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -16,7 +15,6 @@ import (
 var (
 	ErrInvalidCiphertext = errors.New("invalid ciphertext")
 	ErrMissingEncryptKey = errors.New("ENCRYPTION_KEY not configured")
-	ErrMissingHashKey    = errors.New("HASH_KEY not configured")
 	ErrInvalidKeyFormat  = errors.New("key must be base64 encoded")
 	ErrInvalidKeySize    = errors.New("key must be exactly 32 bytes when decoded")
 )
@@ -119,17 +117,8 @@ func DecryptFromBase64(ciphertextB64 string) (string, error) {
 }
 
 func Hash(data string) ([]byte, error) {
-	hashKey, err := getKey("HASH_KEY")
-	if err != nil {
-		return nil, err
-	}
-	if hashKey == nil {
-		return nil, ErrMissingHashKey
-	}
-
-	h := hmac.New(sha256.New, hashKey)
+	h := sha256.New()
 	h.Write([]byte(data))
-
 	return h.Sum(nil), nil
 }
 
