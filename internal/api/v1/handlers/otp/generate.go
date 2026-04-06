@@ -53,10 +53,30 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 		})
 	}
 
-	if strings.TrimSpace(req.DeviceID) == "" {
-		logger.Info("OTP generation failed: missing device_id")
+	interfaceClient, err := interfaceclient.New()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to initialize interface client: %v\n%s", err, debug.Stack()))
+		return echo.ErrInternalServerError
+	}
+
+	devices, err := interfaceClient.ListDevices()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to list devices: %v\n%s", err, debug.Stack()))
+		return echo.ErrInternalServerError
+	}
+
+	var deviceID string
+	for _, device := range devices {
+		if device.Platform == req.Platform {
+			deviceID = device.DeviceID
+			break
+		}
+	}
+
+	if deviceID == "" {
+		logger.Info(fmt.Sprintf("OTP generation failed: no device found for platform %s", req.Platform))
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Error: "Missing required field: device_id",
+			Error: fmt.Sprintf("No device found for platform: %s", req.Platform),
 		})
 	}
 
@@ -68,7 +88,7 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 		var expiryStr string
 
 		otpCode, expiresAt, err = models.CreateOTP(
-			tx, req.PhoneNumber, req.Platform, req.DeviceID,
+			tx, req.PhoneNumber, req.Platform, deviceID,
 		)
 		if err != nil {
 			if err == models.ErrInvalidPhoneNumber {
@@ -84,16 +104,10 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 
 		expiryStr = expiresAt.Format("Mon, at 15:04 MST")
 
-		interfaceClient, err := interfaceclient.New()
-		if err != nil {
-			logger.Error(fmt.Sprintf("Failed to initialize interface client: %v\n%s", err, debug.Stack()))
-			return err
-		}
-
 		messageText := messagetemplate.FormatOTPMessage(otpCode, expiryStr)
 
 		sendReq := &interfaceclient.SendMessageRequest{
-			DeviceID: req.DeviceID,
+			DeviceID: deviceID,
 			Contact:  req.PhoneNumber,
 			Platform: req.Platform,
 			Text:     messageText,

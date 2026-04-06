@@ -48,13 +48,6 @@ func (h *OTPHandler) Verify(c echo.Context) error {
 		})
 	}
 
-	if strings.TrimSpace(req.DeviceID) == "" {
-		logger.Info("OTP verification failed: missing device_id")
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Error: "Missing required field: device_id",
-		})
-	}
-
 	if strings.TrimSpace(req.Code) == "" {
 		logger.Info("OTP verification failed: missing code")
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -63,7 +56,7 @@ func (h *OTPHandler) Verify(c echo.Context) error {
 	}
 
 	err := models.VerifyOTP(
-		h.db.DB(), req.PhoneNumber, req.Platform, req.DeviceID, req.Code,
+		h.db.DB(), req.PhoneNumber, req.Platform, req.Code,
 	)
 	if err != nil {
 		switch err {

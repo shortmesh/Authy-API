@@ -85,10 +85,10 @@
 
       // console.log("ShortMesh: Platforms from API:", platformsFromAPI);
 
-      const supportedPlatformsArray = platformsFromAPI.filter((p) => PLATFORM_REGISTRY[p.platform]);
+      const supportedPlatformsArray = platformsFromAPI.filter((p) => PLATFORM_REGISTRY[p]);
 
       if (supportedPlatformsArray.length === 0) {
-        const apiIds = platformsFromAPI.map((p) => p.platform).join(', ');
+        const apiIds = platformsFromAPI.join(', ');
         console.error('ShortMesh: No platforms found. API returned:', apiIds);
         content.innerHTML = `
     <h2>Verify your account</h2>
@@ -100,10 +100,10 @@
 
       const supportedPlatforms = supportedPlatformsArray
         .map((p) => {
-          const registry = PLATFORM_REGISTRY[p.platform];
+          const registry = PLATFORM_REGISTRY[p];
 
           return `
-      <div class="shortmesh-platform" data-platform="${p.platform}">
+      <div class="shortmesh-platform" data-platform="${p}">
         <span class="icon">
           <img style="width: 26px; height: 26px; margin: auto;" 
                src="${registry.icon}" 

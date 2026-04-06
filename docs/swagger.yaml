@@ -7,9 +7,6 @@ definitions:
     type: object
   otp.GenerateOTPRequest:
     properties:
-      device_id:
-        example: "+237123456789"
-        type: string
       phone_number:
         example: "+237123456780"
         type: string
@@ -17,7 +14,6 @@ definitions:
         example: wa
         type: string
     required:
-    - device_id
     - phone_number
     - platform
     type: object
@@ -35,9 +31,6 @@ definitions:
       code:
         example: "123456"
         type: string
-      device_id:
-        example: "+237123456789"
-        type: string
       phone_number:
         example: "+237123456780"
         type: string
@@ -46,7 +39,6 @@ definitions:
         type: string
     required:
     - code
-    - device_id
     - phone_number
     - platform
     type: object
@@ -60,15 +52,6 @@ definitions:
     properties:
       error:
         example: message
-        type: string
-    type: object
-  platforms.Platform:
-    properties:
-      device_id:
-        example: "+237123456789"
-        type: string
-      platform:
-        example: wa
         type: string
     type: object
 info:
@@ -150,7 +133,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: List all available platforms and their device IDs
+      description: List all unique available platforms
       produces:
       - application/json
       responses:
@@ -158,7 +141,7 @@ paths:
           description: List of platforms retrieved successfully
           schema:
             items:
-              $ref: '#/definitions/platforms.Platform'
+              type: string
             type: array
         "500":
           description: Internal server error

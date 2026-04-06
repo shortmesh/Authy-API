@@ -238,8 +238,8 @@ ShortMeshWidget.open({
 })
 
 # 4. Generate & verify the OTP
-POST http://localhost:8000/api/v1/otp/generate   { phone_number, platform, device_id }
-POST http://localhost:8000/api/v1/otp/verify     { phone_number, platform, code, device_id }`;
+POST http://localhost:8000/api/v1/otp/generate   { phone_number, platform }
+POST http://localhost:8000/api/v1/otp/verify     { phone_number, platform, code }`;
 
 function highlightSetup(raw) {
   let s = raw
@@ -278,7 +278,7 @@ function highlightSetup(raw) {
   );
   // 7. Object keys
   s = s.replace(
-    /\b(endpoints|platforms|onSelect|phone_number|platform|code|device_id)(?=:)/g,
+    /\b(endpoints|platforms|onSelect|phone_number|platform|code)(?=:)/g,
     '<span class="hl-key">$1</span>',
   );
   // 8. Script tag
@@ -461,8 +461,6 @@ function DemoCard() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  // cache the platforms list so onSelect can pick the right device_id
-  const platformsRef = useRef([]);
 
   function reset() {
     setStage("idle");
@@ -473,7 +471,7 @@ function DemoCard() {
     setLoading(false);
   }
 
-  async function sendOTP(chosenPlatform, deviceId) {
+  async function sendOTP(chosenPlatform) {
     setLoading(true);
     setStage("sending");
     setError("");
@@ -482,7 +480,6 @@ function DemoCard() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          device_id: deviceId,
           phone_number: phone,
           platform: chosenPlatform,
         }),
@@ -519,24 +516,11 @@ function DemoCard() {
       setError("Widget not loaded yet — please try again in a moment.");
       return;
     }
-    // Fetch and cache the platforms list so onSelect has device_ids available
-    try {
-      const res = await fetch(platforms_url);
-      const data = await res.json();
-      platformsRef.current = Array.isArray(data) ? data : [];
-    } catch {
-      platformsRef.current = [];
-    }
     window.ShortMeshWidget.open({
       endpoints: { platforms: platforms_url },
       onSelect: (chosenPlatform) => {
-        // Pick the first device registered for the chosen platform
-        const match = platformsRef.current.find(
-          (p) => p.platform === chosenPlatform,
-        );
-        const deviceId = match?.device_id ?? "";
         setPlatform(chosenPlatform);
-        sendOTP(chosenPlatform, deviceId);
+        sendOTP(chosenPlatform);
       },
       onError: () => setError("Could not load platforms. Please try again."),
     });
@@ -551,14 +535,11 @@ function DemoCard() {
     setLoading(true);
     setError("");
     try {
-      const match = platformsRef.current.find((p) => p.platform === platform);
-      const deviceId = match?.device_id ?? "";
       const res = await fetch(`${API_BASE}/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code: otp.replace(/\s/g, ""),
-          device_id: deviceId,
           phone_number: phone,
           platform,
         }),

@@ -157,7 +157,7 @@ func CreateOTP(db *gorm.DB, phoneNumber, platform, deviceID string) (string, tim
 	return code, expiresAt, nil
 }
 
-func VerifyOTP(db *gorm.DB, phoneNumber, platform, deviceID, code string) error {
+func VerifyOTP(db *gorm.DB, phoneNumber, platform, code string) error {
 	if err := ValidateE164PhoneNumber(phoneNumber); err != nil {
 		return err
 	}
@@ -170,8 +170,8 @@ func VerifyOTP(db *gorm.DB, phoneNumber, platform, deviceID, code string) error 
 	}
 
 	var otp OTP
-	err := db.Where("phone_number = ? AND platform = ? AND device_id = ?",
-		phoneNumber, platform, deviceID).First(&otp).Error
+	err := db.Where("phone_number = ? AND platform = ?",
+		phoneNumber, platform).First(&otp).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrOTPNotFound

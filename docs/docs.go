@@ -121,7 +121,7 @@ const docTemplate = `{
         },
         "/api/v1/platforms": {
             "get": {
-                "description": "List all available platforms and their device IDs",
+                "description": "List all unique available platforms",
                 "consumes": [
                     "application/json"
                 ],
@@ -138,7 +138,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/platforms.Platform"
+                                "type": "string"
                             }
                         }
                     },
@@ -165,15 +165,10 @@ const docTemplate = `{
         "otp.GenerateOTPRequest": {
             "type": "object",
             "required": [
-                "device_id",
                 "phone_number",
                 "platform"
             ],
             "properties": {
-                "device_id": {
-                    "type": "string",
-                    "example": "+237123456789"
-                },
                 "phone_number": {
                     "type": "string",
                     "example": "+237123456780"
@@ -201,7 +196,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "code",
-                "device_id",
                 "phone_number",
                 "platform"
             ],
@@ -209,10 +203,6 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "example": "123456"
-                },
-                "device_id": {
-                    "type": "string",
-                    "example": "+237123456789"
                 },
                 "phone_number": {
                     "type": "string",
@@ -239,19 +229,6 @@ const docTemplate = `{
                 "error": {
                     "type": "string",
                     "example": "message"
-                }
-            }
-        },
-        "platforms.Platform": {
-            "type": "object",
-            "properties": {
-                "device_id": {
-                    "type": "string",
-                    "example": "+237123456789"
-                },
-                "platform": {
-                    "type": "string",
-                    "example": "wa"
                 }
             }
         }

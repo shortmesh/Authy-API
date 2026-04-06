@@ -113,7 +113,7 @@
         },
         "/api/v1/platforms": {
             "get": {
-                "description": "List all available platforms and their device IDs",
+                "description": "List all unique available platforms",
                 "consumes": [
                     "application/json"
                 ],
@@ -130,7 +130,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/platforms.Platform"
+                                "type": "string"
                             }
                         }
                     },
@@ -157,15 +157,10 @@
         "otp.GenerateOTPRequest": {
             "type": "object",
             "required": [
-                "device_id",
                 "phone_number",
                 "platform"
             ],
             "properties": {
-                "device_id": {
-                    "type": "string",
-                    "example": "+237123456789"
-                },
                 "phone_number": {
                     "type": "string",
                     "example": "+237123456780"
@@ -193,7 +188,6 @@
             "type": "object",
             "required": [
                 "code",
-                "device_id",
                 "phone_number",
                 "platform"
             ],
@@ -201,10 +195,6 @@
                 "code": {
                     "type": "string",
                     "example": "123456"
-                },
-                "device_id": {
-                    "type": "string",
-                    "example": "+237123456789"
                 },
                 "phone_number": {
                     "type": "string",
@@ -231,19 +221,6 @@
                 "error": {
                     "type": "string",
                     "example": "message"
-                }
-            }
-        },
-        "platforms.Platform": {
-            "type": "object",
-            "properties": {
-                "device_id": {
-                    "type": "string",
-                    "example": "+237123456789"
-                },
-                "platform": {
-                    "type": "string",
-                    "example": "wa"
                 }
             }
         }

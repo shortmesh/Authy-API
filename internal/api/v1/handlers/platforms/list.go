@@ -14,7 +14,7 @@ import (
 // List godoc
 //
 //	@Summary		List available platforms
-//	@Description	List all available platforms and their device IDs
+//	@Description	List all unique available platforms
 //	@Tags			platforms
 //	@Accept			json
 //	@Produce		json
@@ -34,12 +34,14 @@ func (h *PlatformHandler) List(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 
-	platforms := make(ListPlatformsResponse, 0, len(devices))
+	platformMap := make(map[string]bool)
 	for _, device := range devices {
-		platforms = append(platforms, Platform{
-			Platform: device.Platform,
-			DeviceID: device.DeviceID,
-		})
+		platformMap[device.Platform] = true
+	}
+
+	platforms := make(ListPlatformsResponse, 0, len(platformMap))
+	for platform := range platformMap {
+		platforms = append(platforms, platform)
 	}
 
 	logger.Info("Platforms listed successfully")
