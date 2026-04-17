@@ -1,30 +1,33 @@
 (function () {
   // Resolve the base URL from the script tag itself so that icon paths always
-  // point back to the ShortMesh host, even when the widget is embedded on an
+  // point back to the host, even when the widget is embedded on an
   // external domain. Falls back to the page origin if currentScript is unavailable.
-  const _scriptSrc = (document.currentScript && document.currentScript.src) || '';
-  const BASE_URL = _scriptSrc ? _scriptSrc.substring(0, _scriptSrc.lastIndexOf('/') + 1) : '/';
+  const _scriptSrc =
+    (document.currentScript && document.currentScript.src) || "";
+  const BASE_URL = _scriptSrc
+    ? _scriptSrc.substring(0, _scriptSrc.lastIndexOf("/") + 1)
+    : "/";
 
   const PLATFORM_REGISTRY = {
     wa: {
-      label: 'WhatsApp',
-      icon: BASE_URL + 'WhatsApp.svg'
+      label: "WhatsApp",
+      icon: BASE_URL + "Whatsapp.svg",
     },
     telegram: {
-      label: 'Telegram',
-      icon: BASE_URL + 'Logo.svg'
+      label: "Telegram",
+      icon: BASE_URL + "Telegram.svg",
     },
     signal: {
-      label: 'Signal',
-      icon: BASE_URL + 'Signal-Logo.svg'
-    }
+      label: "Signal",
+      icon: BASE_URL + "Signal.svg",
+    },
   };
   let widgetConfig = {
     endpoints: {
-      platforms: null
+      platforms: null,
     },
     onSelect: function () {},
-    onError: function () {}
+    onError: function () {},
   };
 
   function createWidget(config = {}) {
@@ -33,18 +36,18 @@
     widgetConfig.onError = config.onError || function () {};
 
     if (!widgetConfig.endpoints.platforms) {
-      console.error('ShortMesh: platforms endpoint is required');
+      console.error("ShortMesh: platforms endpoint is required");
       return;
     }
 
-    const shadowHost = document.createElement('div');
-    const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
+    const shadowHost = document.createElement("div");
+    const shadowRoot = shadowHost.attachShadow({ mode: "open" });
     document.body.appendChild(shadowHost);
 
     injectStyles(shadowRoot);
 
-    const overlay = document.createElement('div');
-    overlay.id = 'shortmesh-overlay';
+    const overlay = document.createElement("div");
+    overlay.id = "shortmesh-overlay";
 
     overlay.innerHTML = `
       <div class="shortmesh-modal">
@@ -55,8 +58,8 @@
 
     shadowRoot.appendChild(overlay);
 
-    const content = overlay.querySelector('#shortmesh-content');
-    const closeBtn = overlay.querySelector('.shortmesh-close');
+    const content = overlay.querySelector("#shortmesh-content");
+    const closeBtn = overlay.querySelector(".shortmesh-close");
 
     closeBtn.onclick = () => shadowHost.remove();
 
@@ -64,7 +67,7 @@
       const response = await fetch(widgetConfig.endpoints.platforms);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch platforms');
+        throw new Error("Failed to fetch platforms");
       }
 
       return response.json();
@@ -79,17 +82,18 @@
         platformsFromAPI = await fetchPlatforms();
       } catch (err) {
         widgetConfig.onError(err);
-        content.innerHTML = '<p>Failed to load platforms. Contact support for assistance.</p>';
+        content.innerHTML =
+          "<p>Failed to load platforms. Contact support for assistance.</p>";
         return;
       }
 
-      // console.log("ShortMesh: Platforms from API:", platformsFromAPI);
-
-      const supportedPlatformsArray = platformsFromAPI.filter((p) => PLATFORM_REGISTRY[p]);
+      const supportedPlatformsArray = platformsFromAPI.filter(
+        (p) => PLATFORM_REGISTRY[p.platform],
+      );
 
       if (supportedPlatformsArray.length === 0) {
-        const apiIds = platformsFromAPI.join(', ');
-        console.error('ShortMesh: No platforms found. API returned:', apiIds);
+        const apiIds = platformsFromAPI.map((p) => p.platform).join(", ");
+        console.error("ShortMesh: No platforms found. API returned:", apiIds);
         content.innerHTML = `
     <h2>Verify your account</h2>
     <p>No available verification methods. Contact support for assistance.</p>
@@ -100,10 +104,10 @@
 
       const supportedPlatforms = supportedPlatformsArray
         .map((p) => {
-          const registry = PLATFORM_REGISTRY[p];
+          const registry = PLATFORM_REGISTRY[p.platform];
 
           return `
-      <div class="shortmesh-platform" data-platform="${p}">
+      <div class="shortmesh-platform" data-platform="${p.platform}">
         <span class="icon">
           <img style="width: 26px; height: 26px; margin: auto;" 
                src="${registry.icon}" 
@@ -113,7 +117,7 @@
       </div>
     `;
         })
-        .join('');
+        .join("");
       content.innerHTML = `
   <h2>Verify your account</h2>
   <p>Select where you'd like to receive your code.</p>
@@ -131,19 +135,19 @@
 `;
 
       let selected = null;
-      const platforms = content.querySelectorAll('.shortmesh-platform');
-      const continueBtn = content.querySelector('.primary');
+      const platforms = content.querySelectorAll(".shortmesh-platform");
+      const continueBtn = content.querySelector(".primary");
 
       platforms.forEach((el) => {
         el.onclick = () => {
-          platforms.forEach((p) => p.classList.remove('active'));
-          el.classList.add('active');
+          platforms.forEach((p) => p.classList.remove("active"));
+          el.classList.add("active");
           selected = el.dataset.platform;
           continueBtn.disabled = false;
         };
       });
 
-      content.querySelector('.secondary').onclick = () => shadowHost.remove();
+      content.querySelector(".secondary").onclick = () => shadowHost.remove();
 
       continueBtn.onclick = () => {
         if (!selected) return;
@@ -156,7 +160,7 @@
   }
 
   function injectStyles(root) {
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.innerHTML = `
       #shortmesh-overlay {
         position: fixed;
@@ -233,6 +237,8 @@
         padding: 14px;
         border-radius: 10px;
         background: #fff;
+        color: #333;
+        font-size: 16px;
         border: 1px solid #ddd;
         cursor: pointer;
         display: flex;
@@ -274,6 +280,7 @@
 
       .btn.secondary {
         background: #e6e6e6;
+        color: #333;
       }
 
       .shortmesh-footer {
@@ -286,6 +293,6 @@
   }
 
   window.ShortMeshWidget = {
-    open: createWidget
+    open: createWidget,
   };
 })();
