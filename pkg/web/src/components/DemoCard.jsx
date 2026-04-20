@@ -106,8 +106,6 @@ export function DemoCard() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const platformsRef = useRef([]);
-  const theme = useTheme();
 
   function reset() {
     setStage("idle");
@@ -118,7 +116,7 @@ export function DemoCard() {
     setLoading(false);
   }
 
-  async function sendOTP(chosenPlatform, deviceId) {
+  async function sendOTP(chosenPlatform) {
     setLoading(true);
     setStage("sending");
     setError("");
@@ -127,7 +125,6 @@ export function DemoCard() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          device_id: deviceId,
           phone_number: phone,
           platform: chosenPlatform,
         }),
@@ -161,25 +158,14 @@ export function DemoCard() {
     }
     setError("");
     if (!window.ShortMeshWidget) {
-      setError("Widget not loaded yet — please try again in a moment.");
+      setError("Widget not loaded yet, please try again in a moment.");
       return;
-    }
-    try {
-      const res = await fetch(platforms_url);
-      const data = await res.json();
-      platformsRef.current = Array.isArray(data) ? data : [];
-    } catch {
-      platformsRef.current = [];
     }
     window.ShortMeshWidget.open({
       endpoints: { platforms: platforms_url },
       onSelect: (chosenPlatform) => {
-        const match = platformsRef.current.find(
-          (p) => p.platform === chosenPlatform,
-        );
-        const deviceId = match?.device_id ?? "";
         setPlatform(chosenPlatform);
-        sendOTP(chosenPlatform, deviceId);
+        sendOTP(chosenPlatform);
       },
       onError: () => setError("Could not load platforms. Please try again."),
     });
@@ -194,14 +180,11 @@ export function DemoCard() {
     setLoading(true);
     setError("");
     try {
-      const match = platformsRef.current.find((p) => p.platform === platform);
-      const deviceId = match?.device_id ?? "";
       const res = await fetch(`${API_BASE}/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code: otp.replace(/\s/g, ""),
-          device_id: deviceId,
           phone_number: phone,
           platform,
         }),
