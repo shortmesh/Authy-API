@@ -76,7 +76,7 @@ function OTPInputs({ value, onChange, disabled }) {
             height: 44,
             border: `1px solid ${theme.palette.divider}`,
             borderRadius: 2,
-            bgcolor: "grey.50",
+            bgcolor: "background.paper",
             color: "text.primary",
             fontFamily: "monospace",
             fontSize: 18,
@@ -87,7 +87,7 @@ function OTPInputs({ value, onChange, disabled }) {
             "&:focus": {
               borderColor: "primary.main",
               boxShadow: `0 0 0 3px ${theme.palette.primary.main}1a`,
-              bgcolor: "background.paper",
+              // bgcolor: "background.paper",
             },
             "&:disabled": { opacity: 0.5 },
           }}
@@ -317,9 +317,9 @@ export function DemoCard() {
           </Typography>
           <Typography
             fontSize={15}
-            color="text.secondary"
             lineHeight={1.6}
             mb={2.5}
+            sx={{ color: "text.secondary", mb: 2.5 }}
           >
             A 6-digit code was sent to <strong>{phone}</strong>
             {platformLabel && (
@@ -332,7 +332,7 @@ export function DemoCard() {
           </Typography>
           <OTPInputs value={otp} onChange={setOtp} disabled={loading} />
           {error && (
-            <Typography color="error" fontSize={13} mb={1.25}>
+            <Typography fontSize={13} sx={{ mb: 1.25, color: "error.main" }}>
               {error}
             </Typography>
           )}
@@ -340,14 +340,14 @@ export function DemoCard() {
             type="submit"
             fullWidth
             disabled={loading || otp.replace(/\s/g, "").length !== 6}
-            sx={{ textTransform: "none", py: 1.2 }}
+            sx={{ textTransform: "none", py: 1.2, mt: 2.5 }}
           >
             {loading ? "Verifying…" : "Verify"}
           </PlainButton>
           <PlainButton
             size="small"
             onClick={reset}
-            sx={{ mt: 1, textTransform: "none", color: "text.secondary" }}
+            sx={{ mt: 1, textTransform: "none" }}
           >
             ← Start over
           </PlainButton>
@@ -373,10 +373,10 @@ export function DemoCard() {
           >
             <CheckIcon />
           </Box>
-          <Typography variant="h6" fontWeight={600} mb={1.5}>
+          <Typography variant="h6" fontWeight={600} sx={{mb: 1.5, textAlign: "center"}}>
             Phone verified!
           </Typography>
-          <Typography fontSize={15} color="text.secondary" mb={3}>
+          <Typography fontSize={15} color="text.secondary" sx={{mb: 3, textAlign: "center"}}>
             <strong>{phone}</strong> has been successfully verified via Authy.
           </Typography>
           <PlainButton fullWidth onClick={reset} sx={{ textTransform: "none" }}>
