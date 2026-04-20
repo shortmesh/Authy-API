@@ -34,11 +34,17 @@ export function Hero() {
         </Typography>
         <Typography
           variant="body1"
+          sx={{ mb: 2, lineHeight: 2, fontSize: 18, color: "text.secondary" }}
+        >
+          Authy enables receiving OTP code on other platforms other than SMS.
+          This includes platforms such as Signal, WhatsApp, Telegram etc. This
+          is useful for regions where receiving OTP via SMS is unavailable.
+        </Typography>
+        <Typography
+          variant="body1"
           sx={{ mb: 4.5, lineHeight: 2, fontSize: 18, color: "text.secondary" }}
         >
-          Authy is an open-source OTP service that generates, delivers, and
-          verifies one-time passwords over the messaging platforms your users
-          already trust using the Shortmesh API
+          Authy is open source and powered by Shortmesh.
         </Typography>
         <PrimaryButton
           href="https://github.com/shortmesh/Authy-API"
@@ -53,7 +59,11 @@ export function Hero() {
       {/* Right: demo */}
       <Grid
         size={{ xs: 12, md: 6 }}
-        sx={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-end" }}
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+        }}
       >
         <DemoCard />
       </Grid>

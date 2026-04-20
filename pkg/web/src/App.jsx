@@ -4,6 +4,7 @@ import { Nav } from "./components/Nav";
 import { Hero } from "./components/Hero";
 import { Repos } from "./components/Repos";
 import { HowItWorks } from "./components/HowItWorks";
+import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
 import { FossPage } from "./pages/FossPage";
 
@@ -30,6 +31,7 @@ function App() {
         <Hero />
         <Repos />
         <HowItWorks />
+        <Contact />
       </Container>
       <Footer />
     </>

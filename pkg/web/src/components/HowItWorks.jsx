@@ -100,7 +100,8 @@ export function HowItWorks() {
   const theme = useTheme();
   const [tab, setTab] = useState(0);
 
-  const FORM = process.env.VITE_APP_FOSS_FORM_URL || "https://forms.gle/jDZbSPaRqhEhExWZ9";
+  const FORM =
+    process.env.VITE_APP_FOSS_FORM_URL || "https://forms.gle/jDZbSPaRqhEhExWZ9";
 
   return (
     <Box
@@ -143,12 +144,82 @@ export function HowItWorks() {
           },
         }}
       >
-        <Tab label="Developers" />
         <Tab label="FOSS Projects" />
+        <Tab label="Developers" />
       </Tabs>
 
-      {/* ── Developers tab ── */}
+      {/* ── FOSS Projects tab ── */}
       {tab === 0 && (
+        <Grid container spacing={{ xs: 4, md: 6 }} alignItems="center">
+          {/* Text column */}
+          <Grid
+            size={{ xs: 12, md: 6 }}
+            sx={{ my: "auto", justifyContent: "center", alignItems: "center" }}
+          >
+            <Typography
+              variant="h2"
+              sx={{
+                fontSize: { xs: 24, md: 32 },
+                fontWeight: 500,
+                letterSpacing: "-0.5px",
+                mb: 2,
+              }}
+            >
+              Use Hosted Authy{" "}
+            </Typography>
+            <Typography
+              fontSize={15}
+              lineHeight={1.75}
+              mb={4}
+              sx={{ color: "text.secondary" }}
+            >
+              Are you an open source project? Please fill our application form
+              to get started with our hosted instance of Authy. You will be able
+              to manage your own devices while we handle the server instances.
+            </Typography>
+
+            <Stack direction="row" spacing={2} sx={{ mt: 6 }}>
+              <PlainButton
+                variant="contained"
+                href={FORM}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ textTransform: "none", mt: 6 }}
+              >
+                Apply
+              </PlainButton>
+              <PrimaryButton href="#foss" sx={{ textTransform: "none", mt: 6 }}>
+                Read More
+              </PrimaryButton>
+            </Stack>
+          </Grid>
+
+          {/* Widget image */}
+          <Grid
+            size={{ xs: 12, md: 6 }}
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Box
+              component="img"
+              src={WidgetImage}
+              alt="Authy widget"
+              sx={{
+                width: "100%",
+                maxWidth: 480,
+                borderRadius: 2,
+                boxShadow: 6,
+              }}
+            />
+          </Grid>
+        </Grid>
+      )}
+
+      {/* ── Developers tab ── */}
+      {tab === 1 && (
         <Grid container spacing={{ xs: 4, md: 6 }} alignItems="flex-start">
           {/* Steps column */}
           <Grid size={{ xs: 12, md: 6 }}>
@@ -196,8 +267,8 @@ export function HowItWorks() {
                     </Typography>
                     <Typography
                       fontSize={14}
-                      color="text.secondary"
                       lineHeight={1.6}
+                      sx={{ color: "text.secondary", mt: 2 }}
                     >
                       {s.body}
                     </Typography>
@@ -264,76 +335,6 @@ export function HowItWorks() {
                 }}
               />
             </Paper>
-          </Grid>
-        </Grid>
-      )}
-
-      {/* ── FOSS Projects tab ── */}
-      {tab === 1 && (
-        <Grid container spacing={{ xs: 4, md: 6 }} alignItems="center">
-          {/* Text column */}
-          <Grid
-            size={{ xs: 12, md: 6 }}
-            sx={{ my: "auto", justifyContent: "center", alignItems: "center" }}
-          >
-            <Typography
-              variant="h2"
-              sx={{
-                fontSize: { xs: 24, md: 32 },
-                fontWeight: 500,
-                letterSpacing: "-0.5px",
-                mb: 2,
-              }}
-            >
-              Use Hosted Authy{" "}
-            </Typography>
-            <Typography
-              fontSize={15}
-              color="text.secondary"
-              lineHeight={1.75}
-              mb={4}
-            >
-              Are you an open source project? Please fill our application form
-              to get started with our hosted instance of Authy. You will be able
-              to manage your own devices while we handle the server instances.
-            </Typography>
-
-            <Stack direction="row" spacing={2} sx={{ mt: 6 }}>
-              <PlainButton
-                variant="contained"
-                href={FORM}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ textTransform: "none", mt: 6 }}
-              >
-                Apply
-              </PlainButton>
-              <PrimaryButton href="#foss" sx={{ textTransform: "none", mt: 6 }}>
-                Read More
-              </PrimaryButton>
-            </Stack>
-          </Grid>
-
-          {/* Widget image */}
-          <Grid
-            size={{ xs: 12, md: 6 }}
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Box
-              component="img"
-              src={WidgetImage}
-              alt="Authy widget"
-              sx={{
-                width: "100%",
-                maxWidth: 480,
-                borderRadius: 2,
-                boxShadow: 6,
-              }}
-            />
           </Grid>
         </Grid>
       )}
