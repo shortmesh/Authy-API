@@ -100,6 +100,8 @@ export function HowItWorks() {
   const theme = useTheme();
   const [tab, setTab] = useState(0);
 
+  const FORM = process.env.VITE_APP_FOSS_FORM_URL || "https://forms.gle/jDZbSPaRqhEhExWZ9";
+
   return (
     <Box
       component="section"
@@ -299,7 +301,7 @@ export function HowItWorks() {
             <Stack direction="row" spacing={2} sx={{ mt: 6 }}>
               <PlainButton
                 variant="contained"
-                href="https://forms.gle/jDZbSPaRqhEhExWZ9"
+                href={FORM}
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{ textTransform: "none", mt: 6 }}

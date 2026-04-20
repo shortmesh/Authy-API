@@ -11,6 +11,8 @@ import { Nav } from "../components/Nav";
 import { Footer } from "../components/Footer";
 import { PrimaryButton, PlainButton } from "../components/buttons";
 
+const FORM = process.env.VITE_APP_FOSS_FORM_URL || "https://forms.gle/jDZbSPaRqhEhExWZ9";
+
 const FOSS_BENEFITS = [
   {
     n: "01",
@@ -86,7 +88,7 @@ export function FossPage() {
             messaging devices and users.
           </Typography>
           <PrimaryButton
-            href="https://forms.gle/jDZbSPaRqhEhExWZ9"
+            href={FORM}
             target="_blank"
             rel="noopener noreferrer"
             sx={{ mt: 6 }}
