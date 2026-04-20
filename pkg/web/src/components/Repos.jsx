@@ -1,4 +1,12 @@
-import { Box, Chip, Grid, Paper, Stack, Typography, useTheme } from "@mui/material";
+import {
+  Box,
+  Chip,
+  Grid,
+  Paper,
+  Stack,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { REPOS } from "../data/repos";
 
 export function Repos() {
@@ -38,7 +46,7 @@ export function Repos() {
 
       <Grid container spacing={2}>
         {REPOS.map((r) => (
-          <Grid key={r.name} size={{ xs: 6, md: 3 }}>
+          <Grid key={r.name} size={{ xs: 12, md: 3 }}>
             <Paper
               component="a"
               href={r.href}
