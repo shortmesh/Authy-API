@@ -1,17 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import {
-  Box,
-  Paper,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, Paper, Stack, Typography, useTheme } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { PlainButton } from "./buttons";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 function useWidgetScript() {
   useEffect(() => {
@@ -19,10 +13,7 @@ function useWidgetScript() {
     if (existing) existing.remove();
     const s = document.createElement("script");
     s.id = "shortmesh-widget-script";
-    const base = import.meta.env.DEV
-      ? "/widget.js"
-      : "https://authy.shortmesh.com/widget.js";
-    s.src = `${base}?v=${Date.now()}`;
+    s.src = `${import.meta.env.BASE_URL}widget.js?v=${Date.now()}`;
     document.body.appendChild(s);
   }, []);
 }
@@ -53,7 +44,10 @@ function OTPInputs({ value, onChange, disabled }) {
   }
 
   function handlePaste(e) {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
     onChange(pasted);
     inputs.current[Math.min(pasted.length, 5)]?.focus();
     e.preventDefault();
@@ -180,7 +174,9 @@ export function DemoCard() {
     window.ShortMeshWidget.open({
       endpoints: { platforms: platforms_url },
       onSelect: (chosenPlatform) => {
-        const match = platformsRef.current.find((p) => p.platform === chosenPlatform);
+        const match = platformsRef.current.find(
+          (p) => p.platform === chosenPlatform,
+        );
         const deviceId = match?.device_id ?? "";
         setPlatform(chosenPlatform);
         sendOTP(chosenPlatform, deviceId);
@@ -268,7 +264,11 @@ export function DemoCard() {
                 borderColor: theme.palette.primary.main,
                 boxShadow: `0 0 0 2px ${theme.palette.primary.main}33`,
               },
-              "& .PhoneInput": { display: "flex", alignItems: "center", width: "100%" },
+              "& .PhoneInput": {
+                display: "flex",
+                alignItems: "center",
+                width: "100%",
+              },
               "& .PhoneInputCountry": {
                 display: "flex",
                 alignItems: "center",
@@ -288,9 +288,13 @@ export function DemoCard() {
                 fontFamily: "inherit",
                 minWidth: 0,
               },
-              "& .PhoneInputInput::placeholder": { color: theme.palette.text.disabled },
+              "& .PhoneInputInput::placeholder": {
+                color: theme.palette.text.disabled,
+              },
               "& .PhoneInputInput:disabled": { opacity: 0.5 },
-              "& .PhoneInputCountrySelectArrow": { color: theme.palette.text.secondary },
+              "& .PhoneInputCountrySelectArrow": {
+                color: theme.palette.text.secondary,
+              },
             })}
           >
             <PhoneInput
@@ -299,13 +303,18 @@ export function DemoCard() {
               name="phone number"
               defaultCountry="CM"
               value={phone}
-              onChange={(value) => { setPhone(value ?? ""); setError(""); }}
+              onChange={(value) => {
+                setPhone(value ?? "");
+                setError("");
+              }}
               disabled={loading}
               autoComplete="tel"
             />
           </Box>
           {error && (
-            <Typography color="error" fontSize={13} mb={1.25}>{error}</Typography>
+            <Typography color="error" fontSize={13} mb={1.25}>
+              {error}
+            </Typography>
           )}
           <PlainButton
             type="submit"
@@ -323,13 +332,26 @@ export function DemoCard() {
           <Typography variant="h6" fontWeight={600} mb={2}>
             Enter your code
           </Typography>
-          <Typography fontSize={15} color="text.secondary" lineHeight={1.6} mb={2.5}>
+          <Typography
+            fontSize={15}
+            color="text.secondary"
+            lineHeight={1.6}
+            mb={2.5}
+          >
             A 6-digit code was sent to <strong>{phone}</strong>
-            {platformLabel && <> via <strong>{platformLabel}</strong></>}.
+            {platformLabel && (
+              <>
+                {" "}
+                via <strong>{platformLabel}</strong>
+              </>
+            )}
+            .
           </Typography>
           <OTPInputs value={otp} onChange={setOtp} disabled={loading} />
           {error && (
-            <Typography color="error" fontSize={13} mb={1.25}>{error}</Typography>
+            <Typography color="error" fontSize={13} mb={1.25}>
+              {error}
+            </Typography>
           )}
           <PlainButton
             type="submit"
@@ -368,7 +390,9 @@ export function DemoCard() {
           >
             <CheckIcon />
           </Box>
-          <Typography variant="h6" fontWeight={600} mb={1.5}>Phone verified!</Typography>
+          <Typography variant="h6" fontWeight={600} mb={1.5}>
+            Phone verified!
+          </Typography>
           <Typography fontSize={15} color="text.secondary" mb={3}>
             <strong>{phone}</strong> has been successfully verified via Authy.
           </Typography>
