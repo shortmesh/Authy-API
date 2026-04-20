@@ -200,6 +200,8 @@
         top: 14px;
         cursor: pointer;
         font-size: 18px;
+        font-weight: bold;
+        color: #101010;
       }
 
       h2 {
