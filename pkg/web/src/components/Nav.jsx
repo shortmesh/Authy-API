@@ -16,8 +16,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { PlainButton } from "./buttons";
 
 const NAV_LINKS = [
-  { label: "FOSS Projects", href: "#foss" },
-  { label: "How it works", href: "#how" },
+  // { label: "FOSS Projects", href: "#foss" },
+  { label: "Use Authy", href: "#use-authy" },
 ];
 
 export function Nav() {

@@ -10,6 +10,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { PrimaryButton, PlainButton } from "./buttons";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WidgetImage from "../asset/widget.png";
 
 const SETUP_STEPS = [
@@ -49,7 +50,7 @@ POST http://localhost:8000/api/v1/devices
 # widget.js is served directly from your Authy instance
 <script src="http://localhost:8000/widget.js"></script>
 ShortMeshWidget.open({
-  endpoints: { platforms: "http://localhost:8000/api/platforms" },
+  endpoints: { platforms: "http://localhost:8000/api/v1/platforms" },
   onSelect: (platform) => sendOTP(phone, platform),
 })
 
@@ -106,7 +107,7 @@ export function HowItWorks() {
   return (
     <Box
       component="section"
-      id="how"
+      id="use-authy"
       sx={{
         py: { xs: 7, md: 20 },
         borderTop: `1px solid ${theme.palette.divider}`,
@@ -122,7 +123,7 @@ export function HowItWorks() {
           mb: 1.5,
         }}
       >
-        How it works
+        Use Authy
       </Typography>
 
       {/* Tabs */}
@@ -170,28 +171,41 @@ export function HowItWorks() {
             <Typography
               fontSize={15}
               lineHeight={1.75}
-              mb={4}
-              sx={{ color: "text.secondary" }}
+              sx={{ color: "text.secondary", mb: 4 }}
             >
               Are you an open source project? Please fill our application form
               to get started with our hosted instance of Authy. You will be able
               to manage your own devices while we handle the server instances.
             </Typography>
 
-            <Stack direction="row" spacing={2} sx={{ mt: 6 }}>
-              <PlainButton
-                variant="contained"
-                href={FORM}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ textTransform: "none", mt: 6 }}
-              >
-                Apply
-              </PlainButton>
-              <PrimaryButton href="#foss" sx={{ textTransform: "none", mt: 6 }}>
-                Read More
-              </PrimaryButton>
+            <Stack spacing={1.5} mb={4}>
+              {[
+                "No hosting or infrastructure required",
+                "Automatic updates as we ship them",
+                "Simple integration and device management",
+              ].map((benefit) => (
+                <Box
+                  key={benefit}
+                  sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                >
+                  <CheckCircleIcon
+                    sx={{ fontSize: 18, color: "primary.main", flexShrink: 0 }}
+                  />
+                  <Typography fontSize={14} sx={{ color: "text.secondary" }}>
+                    {benefit}
+                  </Typography>
+                </Box>
+              ))}
             </Stack>
+
+            <PrimaryButton
+              href={FORM}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ textTransform: "none", mt: 6 }}
+            >
+              Apply
+            </PrimaryButton>
           </Grid>
 
           {/* Widget image */}
