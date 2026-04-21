@@ -1,6 +1,8 @@
-import { Box, Chip, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Chip, Grid, Link, Typography, useTheme } from "@mui/material";
 import { PrimaryButton } from "./buttons";
 import { DemoCard } from "./DemoCard";
+
+const FORM = process.env.VITE_APP_FOSS_FORM_URL || "https://forms.gle/jDZbSPaRqhEhExWZ9";
 
 export function Hero() {
   const theme = useTheme();
@@ -54,6 +56,20 @@ export function Hero() {
         >
           Get the API
         </PrimaryButton>
+        <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 0.5 }}>
+          <Typography variant="body2" sx={{ color: "text.secondary", fontSize: 14 }}>
+            FOSS project?
+          </Typography>
+          <Link
+            href={FORM}
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="always"
+            sx={{ fontSize: 14, fontWeight: 600, color: "primary.main" }}
+          >
+            Apply to use our hosted instance
+          </Link>
+        </Box>
       </Grid>
 
       {/* Right: demo */}
