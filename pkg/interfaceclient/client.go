@@ -42,6 +42,29 @@ func New() (*Client, error) {
 	}, nil
 }
 
+func NewWithToken(token string) (*Client, error) {
+	baseURL := os.Getenv("INTERFACE_API_URL")
+	if baseURL == "" {
+		return nil, fmt.Errorf("INTERFACE_API_URL environment variable is not set")
+	}
+
+	if err := config.ValidateExternalURL(baseURL, "INTERFACE_API_URL"); err != nil {
+		return nil, err
+	}
+
+	if token == "" {
+		return nil, fmt.Errorf("token is required")
+	}
+
+	return &Client{
+		baseURL: baseURL,
+		token:   token,
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}, nil
+}
+
 func (c *Client) SendMessage(req *SendMessageRequest) (*SendMessageResponse, error) {
 	body, err := json.Marshal(req)
 	if err != nil {

@@ -13,6 +13,9 @@ definitions:
       platform:
         example: wa
         type: string
+      sender:
+        example: "+237123456789"
+        type: string
     required:
     - phone_number
     - platform
@@ -65,7 +68,8 @@ paths:
       consumes:
       - application/json
       description: Generate a secure OTP code and send it to the specified phone number
-        via the interface API
+        via the interface API. Supports optional Bearer token authentication for using
+        custom Matrix tokens and specifying a sender device.
       parameters:
       - description: OTP generation request
         in: body
@@ -84,10 +88,20 @@ paths:
           description: Invalid request body or validation error
           schema:
             $ref: '#/definitions/otp.ErrorResponse'
+        "401":
+          description: Invalid or missing authorization header
+          schema:
+            $ref: '#/definitions/otp.ErrorResponse'
+        "403":
+          description: Invalid or expired token
+          schema:
+            $ref: '#/definitions/otp.ErrorResponse'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/otp.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Generate and send OTP
       tags:
       - otp
@@ -133,7 +147,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: List all unique available platforms
+      description: List all unique available platforms. Supports optional Bearer token
+        authentication for using custom Matrix tokens.
       produces:
       - application/json
       responses:
@@ -143,11 +158,27 @@ paths:
             items:
               type: string
             type: array
+        "401":
+          description: Invalid or missing authorization header
+          schema:
+            $ref: '#/definitions/platforms.ErrorResponse'
+        "403":
+          description: Invalid or expired token
+          schema:
+            $ref: '#/definitions/platforms.ErrorResponse'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/platforms.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: List available platforms
       tags:
       - platforms
+securityDefinitions:
+  BearerAuth:
+    description: 'Optional Matrix token authentication. Format: Bearer mt_xxxxx'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

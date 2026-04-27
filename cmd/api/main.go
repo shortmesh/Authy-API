@@ -16,9 +16,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
-//	@title			Authy API
-//	@version		1.0
-//	@description	API for Authy service
+//	@title						Authy API
+//	@version					1.0
+//	@description				API for Authy service
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Optional Matrix token authentication. Format: Bearer mt_xxxxx
 
 func gracefulShutdown(apiServer *http.Server, cw *cleanup.CleanupWorker, done chan bool) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

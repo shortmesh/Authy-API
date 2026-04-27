@@ -14,15 +14,28 @@ import (
 // List godoc
 //
 //	@Summary		List available platforms
-//	@Description	List all unique available platforms
+//	@Description	List all unique available platforms. Supports optional Bearer token authentication for using custom Matrix tokens.
 //	@Tags			platforms
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	ListPlatformsResponse	"List of platforms retrieved successfully"
+//	@Failure		401	{object}	ErrorResponse			"Invalid or missing authorization header"
+//	@Failure		403	{object}	ErrorResponse			"Invalid or expired token"
 //	@Failure		500	{object}	ErrorResponse			"Internal server error"
+//	@Security		BearerAuth
 //	@Router			/api/v1/platforms [get]
 func (h *PlatformHandler) List(c echo.Context) error {
-	interfaceClient, err := interfaceclient.New()
+	matrixToken, _ := c.Get("matrix_token").(string)
+
+	var interfaceClient *interfaceclient.Client
+	var err error
+
+	if matrixToken != "" {
+		interfaceClient, err = interfaceclient.NewWithToken(matrixToken)
+	} else {
+		interfaceClient, err = interfaceclient.New()
+	}
+
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to initialize interface client: %v\n%s", err, debug.Stack()))
 		return echo.ErrInternalServerError
