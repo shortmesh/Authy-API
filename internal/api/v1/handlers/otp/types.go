@@ -8,6 +8,7 @@ import (
 type GenerateOTPRequest struct {
 	PhoneNumber string `json:"phone_number" example:"+237123456780" validate:"required"`
 	Platform    string `json:"platform" example:"wa" validate:"required"`
+	Sender      string `json:"sender,omitempty" example:"+237123456789"`
 }
 
 // GenerateOTPResponse represents the response after generating an OTP

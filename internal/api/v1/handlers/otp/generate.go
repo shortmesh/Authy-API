@@ -21,14 +21,17 @@ import (
 // Generate godoc
 //
 //	@Summary		Generate and send OTP
-//	@Description	Generate a secure OTP code and send it to the specified phone number via the interface API
+//	@Description	Generate a secure OTP code and send it to the specified phone number via the interface API. Supports optional Bearer token authentication for using custom Matrix tokens and specifying a sender device.
 //	@Tags			otp
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		GenerateOTPRequest	true	"OTP generation request"
 //	@Success		200		{object}	GenerateOTPResponse	"OTP sent successfully"
 //	@Failure		400		{object}	ErrorResponse		"Invalid request body or validation error"
+//	@Failure		401		{object}	ErrorResponse		"Invalid or missing authorization header"
+//	@Failure		403		{object}	ErrorResponse		"Invalid or expired token"
 //	@Failure		500		{object}	ErrorResponse		"Internal server error"
+//	@Security		BearerAuth
 //	@Router			/api/v1/otp/generate [post]
 func (h *OTPHandler) Generate(c echo.Context) error {
 	var req GenerateOTPRequest
@@ -53,7 +56,17 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 		})
 	}
 
-	interfaceClient, err := interfaceclient.New()
+	matrixToken, _ := c.Get("matrix_token").(string)
+
+	var interfaceClient *interfaceclient.Client
+	var err error
+
+	if matrixToken != "" {
+		interfaceClient, err = interfaceclient.NewWithToken(matrixToken)
+	} else {
+		interfaceClient, err = interfaceclient.New()
+	}
+
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to initialize interface client: %v\n%s", err, debug.Stack()))
 		return echo.ErrInternalServerError
@@ -66,10 +79,14 @@ func (h *OTPHandler) Generate(c echo.Context) error {
 	}
 
 	var deviceID string
-	for _, device := range devices {
-		if device.Platform == req.Platform {
-			deviceID = device.DeviceID
-			break
+	if matrixToken != "" && strings.TrimSpace(req.Sender) != "" {
+		deviceID = req.Sender
+	} else {
+		for _, device := range devices {
+			if device.Platform == req.Platform {
+				deviceID = device.DeviceID
+				break
+			}
 		}
 	}
 

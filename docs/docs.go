@@ -17,7 +17,12 @@ const docTemplate = `{
     "paths": {
         "/api/v1/otp/generate": {
             "post": {
-                "description": "Generate a secure OTP code and send it to the specified phone number via the interface API",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Generate a secure OTP code and send it to the specified phone number via the interface API. Supports optional Bearer token authentication for using custom Matrix tokens and specifying a sender device.",
                 "consumes": [
                     "application/json"
                 ],
@@ -48,6 +53,18 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid request body or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/otp.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or missing authorization header",
+                        "schema": {
+                            "$ref": "#/definitions/otp.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Invalid or expired token",
                         "schema": {
                             "$ref": "#/definitions/otp.ErrorResponse"
                         }
@@ -121,7 +138,12 @@ const docTemplate = `{
         },
         "/api/v1/platforms": {
             "get": {
-                "description": "List all unique available platforms",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all unique available platforms. Supports optional Bearer token authentication for using custom Matrix tokens.",
                 "consumes": [
                     "application/json"
                 ],
@@ -140,6 +162,18 @@ const docTemplate = `{
                             "items": {
                                 "type": "string"
                             }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or missing authorization header",
+                        "schema": {
+                            "$ref": "#/definitions/platforms.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Invalid or expired token",
+                        "schema": {
+                            "$ref": "#/definitions/platforms.ErrorResponse"
                         }
                     },
                     "500": {
@@ -176,6 +210,10 @@ const docTemplate = `{
                 "platform": {
                     "type": "string",
                     "example": "wa"
+                },
+                "sender": {
+                    "type": "string",
+                    "example": "+237123456789"
                 }
             }
         },
@@ -231,6 +269,14 @@ const docTemplate = `{
                     "example": "message"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Optional Matrix token authentication. Format: Bearer mt_xxxxx",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
