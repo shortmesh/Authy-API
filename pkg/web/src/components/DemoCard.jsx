@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import "react-phone-number-input/style.css";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import { Box, Paper, Stack, Typography, useTheme } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Stack,
+  Typography,
+  useTheme,
+  Divider,
+} from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { PlainButton } from "./buttons";
 
@@ -220,18 +227,37 @@ export function DemoCard() {
       variant="outlined"
       sx={{
         borderRadius: 2,
-        p: { xs: "20px 16px", sm: "32px" },
+        // p: { xs: "20px 16px", sm: "25px" },
         boxShadow: 3,
         bgcolor: (theme) =>
-          theme.palette.mode === "dark" ? "#020306" : "#F2F2F2",
+          theme.palette.mode === "dark" ? "#131415" : "#F2F2F2",
       }}
     >
+      <Typography
+        variant="body2"
+        fontWeight={600}
+        sx={{
+          my: 1,
+          mx: 2,
+          // alignItems: "center",
+          // display: "flex",
+          // my: "auto",
+          // alignContent: "center",
+        }}
+      >
+        Try Demo
+      </Typography>
+      <Divider />
       {(stage === "idle" || stage === "sending") && (
-        <Box component="form" onSubmit={handlePhoneSubmit}>
-          <Typography variant="h6" fontWeight={600} mb={2}>
-            Try Demo
-          </Typography>
-          <Typography variant="body1" sx={{ my: 2, color: "text.secondary" }}>
+        <Box
+          component="form"
+          onSubmit={handlePhoneSubmit}
+          sx={{ p: { xs: "20px 16px", sm: "25px" } }}
+        >
+          <Typography
+            variant="body1"
+            sx={{ mb: 2, mt: 2, color: "text.secondary" }}
+          >
             Get hands-on experience with Authy. This is just a demo and the code
             sent does not have any use beyond this demo.
           </Typography>
@@ -373,10 +399,18 @@ export function DemoCard() {
           >
             <CheckIcon />
           </Box>
-          <Typography variant="h6" fontWeight={600} sx={{mb: 1.5, textAlign: "center"}}>
+          <Typography
+            variant="h6"
+            fontWeight={600}
+            sx={{ mb: 1.5, textAlign: "center" }}
+          >
             Phone verified!
           </Typography>
-          <Typography fontSize={15} color="text.secondary" sx={{mb: 3, textAlign: "center"}}>
+          <Typography
+            fontSize={15}
+            color="text.secondary"
+            sx={{ mb: 3, textAlign: "center" }}
+          >
             <strong>{phone}</strong> has been successfully verified via Authy.
           </Typography>
           <PlainButton fullWidth onClick={reset} sx={{ textTransform: "none" }}>

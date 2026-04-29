@@ -1,15 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Grid,
-  Paper,
   Stack,
   Tab,
   Tabs,
   Typography,
   useTheme,
 } from "@mui/material";
-import { PrimaryButton, PlainButton } from "./buttons";
+import { PrimaryButton } from "./buttons";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WidgetImage from "../asset/widget.png";
 
@@ -36,65 +35,284 @@ const SETUP_STEPS = [
   },
 ];
 
-// Hardcoded constant — safe to use dangerouslySetInnerHTML
-const SETUP_SNIPPET = `# 1. Clone & start your Authy instance
-git clone https://github.com/shortmesh/Authy-API
-make setup && make migrate-up
-make run
+const SCRIPT = [
+  {
+    kind: "prompt",
+    text: "git clone https://github.com/shortmesh/Authy-API",
+    delay: 400,
+  },
+  { kind: "out", text: "Cloning into 'Authy-API'..." },
+  { kind: "out", text: "remote: Enumerating objects: 312, done." },
+  { kind: "out", text: "remote: Counting objects: 100% (312/312), done." },
+  {
+    kind: "out",
+    text: "Receiving objects: 100% (312/312), 148.7 KiB | 4.2 MiB/s, done.",
+  },
+  { kind: "out", text: "Resolving deltas: 100% (201/201), done." },
+  { kind: "blank" },
+  { kind: "prompt", text: "make setup && make migrate-up", delay: 350 },
+  { kind: "out", text: "▶  Copying default.env → .env" },
+  { kind: "out", text: "▶  Downloading dependencies..." },
+  { kind: "success", text: "✓  Setup complete" },
+  { kind: "out", text: "▶  Running migrations..." },
+  { kind: "success", text: "✓  All migrations up to date" },
+  { kind: "blank" },
+  { kind: "prompt", text: "make run", delay: 300 },
+  { kind: "out", text: "Database migrations completed successfully" },
+  { kind: "out", text: "▶  Starting server..." },
+  { kind: "blank" },
+  { kind: "success", text: "⇨  http server started on [::]:8080" },
+];
 
-# 2. Link a messaging device (e.g. WhatsApp)
-POST http://localhost:8000/api/v1/devices
-{ "platform": "wa", "phone_number": "+1234567890" }
+function TerminalPanel() {
+  const [rendered, setRendered] = useState([]);
+  const [typing, setTyping] = useState(null);
+  const [cursorOn, setCursorOn] = useState(true);
+  const timerRef = useRef(null);
+  const bodyRef = useRef(null);
 
-# 3. Drop the widget into your page (List platforms)
-# widget.js is served directly from your Authy instance
-<script src="http://localhost:8000/widget.js"></script>
-ShortMeshWidget.open({
-  endpoints: { platforms: "http://localhost:8000/api/v1/platforms" },
-  onSelect: (platform) => sendOTP(phone, platform),
-})
+  // Blinking cursor
+  useEffect(() => {
+    const id = setInterval(() => setCursorOn((v) => !v), 530);
+    return () => clearInterval(id);
+  }, []);
 
-# 4. Generate & verify the OTP
-POST http://localhost:8000/api/v1/otp/generate   { phone_number, platform, device_id }
-POST http://localhost:8000/api/v1/otp/verify     { phone_number, platform, code, device_id }`;
+  useEffect(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+    }
+  }, [rendered, typing]);
 
-function highlightSetup(raw) {
-  let s = raw
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  useEffect(() => {
+    let cancelled = false;
 
-  const comments = [];
-  s = s.replace(/#[^\n]*/g, (m) => {
-    comments.push(m);
-    return "\x01";
-  });
-  s = s.replace(/"([^"]*)"/g, "\x02$1\x03");
-  s = s.replace(
-    /\b(POST|GET|PUT|DELETE|PATCH)\b/g,
-    '<span class="hl-kw">$1</span>',
+    function run(lineIdx, charIdx) {
+      if (cancelled) return;
+
+      if (lineIdx >= SCRIPT.length) {
+        timerRef.current = setTimeout(() => {
+          if (!cancelled) {
+            setRendered([]);
+            setTyping(null);
+            run(0, 0);
+          }
+        }, 2800);
+        return;
+      }
+
+      const line = SCRIPT[lineIdx];
+
+      if (line.kind === "prompt") {
+        if (charIdx < line.text.length) {
+          setTyping({ text: line.text.slice(0, charIdx) });
+          timerRef.current = setTimeout(() => run(lineIdx, charIdx + 1), 38);
+        } else {
+          setRendered((prev) => [...prev, { kind: "prompt", text: line.text }]);
+          setTyping(null);
+          timerRef.current = setTimeout(
+            () => run(lineIdx + 1, 0),
+            line.delay ?? 250,
+          );
+        }
+      } else if (line.kind === "blank") {
+        setRendered((prev) => [...prev, { kind: "blank" }]);
+        timerRef.current = setTimeout(() => run(lineIdx + 1, 0), 200);
+      } else {
+        setRendered((prev) => [...prev, line]);
+        timerRef.current = setTimeout(() => run(lineIdx + 1, 0), 75);
+      }
+    }
+
+    run(0, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const fg = "#e2e8f0";
+  const dimFg = "rgba(226,232,240,0.5)";
+
+  const Cursor = () => (
+    <Box
+      component="span"
+      sx={{
+        display: "inline-block",
+        width: "0.55em",
+        height: "0.9em",
+        bgcolor: cursorOn ? fg : "transparent",
+        verticalAlign: "text-bottom",
+        ml: "1px",
+      }}
+    />
   );
-  s = s.replace(/(\/api\/v1[^\s,}]*)/g, '<span class="hl-path">$1</span>');
-  s = s.replace(/^(git|make)\b/gm, '<span class="hl-kw">$1</span>');
-  s = s.replace(
-    /\b(clone|setup|migrate-up|run)\b/g,
-    '<span class="hl-fn">$1</span>',
+
+  function renderLine(line, i) {
+    if (line.kind === "blank") return <Box key={i} sx={{ height: "0.65em" }} />;
+    if (line.kind === "prompt")
+      return (
+        <Box
+          key={i}
+          sx={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: "6px",
+            mb: "1px",
+          }}
+        >
+          <Box
+            component="span"
+            sx={{ color: "#5af78e", userSelect: "none", flexShrink: 0 }}
+          >
+            →
+          </Box>
+          <Box
+            component="span"
+            sx={{ color: "#57c7ff", userSelect: "none", flexShrink: 0 }}
+          >
+            ~
+          </Box>
+          <Box component="span" sx={{ color: fg }}>
+            {line.text}
+          </Box>
+        </Box>
+      );
+    if (line.kind === "success")
+      return (
+        <Box key={i} sx={{ color: "#5af78e", pl: "28px" }}>
+          {line.text}
+        </Box>
+      );
+    return (
+      <Box key={i} sx={{ color: dimFg, pl: "28px" }}>
+        {line.text}
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        borderRadius: "10px",
+        overflow: "hidden",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.45)",
+        fontFamily: "'JetBrains Mono','Fira Code','Cascadia Code',monospace",
+        fontSize: 12.5,
+        lineHeight: 1.65,
+        bgcolor: "#131415",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.75,
+          px: 1.75,
+          py: 1.25,
+          bgcolor: "#1c1e21",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <Box
+          sx={{
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
+            bgcolor: "#ff5f57",
+          }}
+        />
+        <Box
+          sx={{
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
+            bgcolor: "#febc2e",
+          }}
+        />
+        <Box
+          sx={{
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
+            bgcolor: "#28c840",
+          }}
+        />
+        <Typography
+          sx={{
+            ml: "auto",
+            mr: "auto",
+            fontSize: 11,
+            color: "rgba(255,255,255,0.35)",
+            letterSpacing: "0.03em",
+          }}
+        >
+          zsh — authy-api
+        </Typography>
+      </Box>
+
+      <Box
+        ref={bodyRef}
+        sx={{
+          p: "16px 20px",
+          height: 450,
+          overflowY: "auto",
+          overflowX: "auto",
+          color: fg,
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": { display: "none" },
+        }}
+      >
+        {rendered.map(renderLine)}
+
+        {typing !== null && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "baseline",
+              gap: "6px",
+              mb: "1px",
+            }}
+          >
+            <Box
+              component="span"
+              sx={{ color: "#5af78e", userSelect: "none", flexShrink: 0 }}
+            >
+              →
+            </Box>
+            <Box
+              component="span"
+              sx={{ color: "#57c7ff", userSelect: "none", flexShrink: 0 }}
+            >
+              ~
+            </Box>
+            <Box component="span" sx={{ color: fg }}>
+              {typing.text}
+            </Box>
+            <Cursor />
+          </Box>
+        )}
+
+        {typing === null && rendered.length === 0 && (
+          <Box sx={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+            <Box
+              component="span"
+              sx={{ color: "#5af78e", userSelect: "none", flexShrink: 0 }}
+            >
+              →
+            </Box>
+            <Box
+              component="span"
+              sx={{ color: "#57c7ff", userSelect: "none", flexShrink: 0 }}
+            >
+              ~
+            </Box>
+            <Cursor />
+          </Box>
+        )}
+      </Box>
+    </Box>
   );
-  s = s.replace(
-    /\b(ShortMeshWidget|sendOTP)\b/g,
-    '<span class="hl-fn">$1</span>',
-  );
-  s = s.replace(
-    /\b(endpoints|platforms|onSelect|phone_number|platform|code|device_id)(?=:)/g,
-    '<span class="hl-key">$1</span>',
-  );
-  s = s.replace(/&lt;(\/?script)/gi, '&lt;<span class="hl-tag">$1</span>');
-  s = s.replace(/\x02([^\x03]*)\x03/g, '<span class="hl-str">"$1"</span>');
-  s = s.replace(
-    /\x01/g,
-    () => `<span class="hl-comment">${comments.shift()}</span>`,
-  );
-  return s;
 }
 
 export function HowItWorks() {
@@ -110,23 +328,18 @@ export function HowItWorks() {
       id="use-authy"
       sx={{
         py: { xs: 7, md: 20 },
-        borderTop: `1px solid ${theme.palette.divider}`,
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "1px",
+          background: `linear-gradient(90deg, transparent 0%, ${theme.palette.divider} 20%, ${theme.palette.divider} 80%, transparent 100%)`,
+        },
       }}
     >
-      <Typography
-        sx={{
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          fontSize: 16,
-          fontWeight: 600,
-          color: "text.secondary",
-          mb: 1.5,
-        }}
-      >
-        Use Authy
-      </Typography>
-
-      {/* Tabs */}
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
@@ -149,10 +362,8 @@ export function HowItWorks() {
         <Tab label="Developers" />
       </Tabs>
 
-      {/* ── FOSS Projects tab ── */}
       {tab === 0 && (
         <Grid container spacing={{ xs: 4, md: 6 }} alignItems="center">
-          {/* Text column */}
           <Grid
             size={{ xs: 12, md: 6 }}
             sx={{ my: "auto", justifyContent: "center", alignItems: "center" }}
@@ -160,9 +371,9 @@ export function HowItWorks() {
             <Typography
               variant="h2"
               sx={{
-                fontSize: { xs: 24, md: 32 },
-                fontWeight: 500,
-                letterSpacing: "-0.5px",
+                fontSize: { xs: 28, md: 40 },
+                fontWeight: 600,
+                letterSpacing: "-1.5px",
                 mb: 2,
               }}
             >
@@ -191,7 +402,7 @@ export function HowItWorks() {
                   <CheckCircleIcon
                     sx={{ fontSize: 18, color: "primary.main", flexShrink: 0 }}
                   />
-                  <Typography fontSize={14} sx={{ color: "text.secondary" }}>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
                     {benefit}
                   </Typography>
                 </Box>
@@ -208,7 +419,6 @@ export function HowItWorks() {
             </PrimaryButton>
           </Grid>
 
-          {/* Widget image */}
           <Grid
             size={{ xs: 12, md: 6 }}
             sx={{
@@ -232,17 +442,15 @@ export function HowItWorks() {
         </Grid>
       )}
 
-      {/* ── Developers tab ── */}
       {tab === 1 && (
         <Grid container spacing={{ xs: 4, md: 6 }} alignItems="flex-start">
-          {/* Steps column */}
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography
               variant="h2"
               sx={{
-                fontSize: { xs: 24, md: 32 },
-                fontWeight: 500,
-                letterSpacing: "-0.5px",
+                fontSize: { xs: 28, md: 40 },
+                fontWeight: 600,
+                letterSpacing: "-1.5px",
                 mb: 4,
               }}
             >
@@ -280,7 +488,7 @@ export function HowItWorks() {
                       {s.title}
                     </Typography>
                     <Typography
-                      fontSize={14}
+                      variant="body2"
                       lineHeight={1.6}
                       sx={{ color: "text.secondary", mt: 2 }}
                     >
@@ -302,53 +510,8 @@ export function HowItWorks() {
             </PrimaryButton>
           </Grid>
 
-          {/* Code panel */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper
-              elevation={4}
-              variant="outlined"
-              sx={{
-                borderRadius: 2,
-                overflow: "hidden",
-                boxShadow: 3,
-                bgcolor: (t) =>
-                  t.palette.mode === "dark" ? "#020306" : "#F2F2F2",
-              }}
-            >
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1,
-                  borderBottom: `1px solid ${theme.palette.divider}`,
-                  fontFamily: "monospace",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                  color: "text.secondary",
-                }}
-              >
-                authy-setup
-              </Box>
-              <Box
-                component="pre"
-                className="setup-pre"
-                sx={{
-                  m: 0,
-                  p: "20px 24px",
-                  fontFamily: "monospace",
-                  fontSize: 13,
-                  lineHeight: 1.75,
-                  color: "text.primary",
-                  overflowX: "auto",
-                  whiteSpace: "pre",
-                  bgcolor: "transparent",
-                }}
-                dangerouslySetInnerHTML={{
-                  __html: highlightSetup(SETUP_SNIPPET),
-                }}
-              />
-            </Paper>
+            <TerminalPanel />
           </Grid>
         </Grid>
       )}
