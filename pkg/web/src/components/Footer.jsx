@@ -14,8 +14,17 @@ export function Footer() {
     <Box
       component="footer"
       sx={{
-        borderTop: `1px solid ${theme.palette.divider}`,
         py: { xs: 3, md: 4 },
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "1px",
+          background: `linear-gradient(90deg, transparent 0%, ${theme.palette.divider} 20%, ${theme.palette.divider} 80%, transparent 100%)`,
+        },
       }}
     >
       <Container maxWidth="xl" sx={{ px: { xs: 2, md: 3 } }}>
@@ -39,7 +48,6 @@ export function Footer() {
             </Typography>
           </Stack>
 
-          {/* Mobile: 2-column grid */}
           <Box
             sx={{
               display: { xs: "grid", sm: "none" },
@@ -64,7 +72,6 @@ export function Footer() {
             ))}
           </Box>
 
-          {/* Desktop: horizontal row */}
           <Stack
             direction="row"
             spacing={2.5}
