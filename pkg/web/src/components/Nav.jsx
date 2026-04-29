@@ -31,8 +31,17 @@ export function Nav() {
         elevation={0}
         sx={{
           bgcolor: "background.paper",
-          borderBottom: `1px solid ${theme.palette.divider}`,
           color: "text.primary",
+          position: "relative",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "1px",
+            background: `linear-gradient(90deg, transparent 0%, ${theme.palette.divider} 20%, ${theme.palette.divider} 80%, transparent 100%)`,
+          },
         }}
       >
         <Container maxWidth="xl" disableGutters>
@@ -47,8 +56,6 @@ export function Nav() {
             <Stack
               direction="row"
               alignItems="center"
-              component={Link}
-              href="/demo"
               spacing={1}
               sx={{ flexGrow: 1 }}
             >
