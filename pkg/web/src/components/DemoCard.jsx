@@ -94,7 +94,6 @@ function OTPInputs({ value, onChange, disabled }) {
             "&:focus": {
               borderColor: "primary.main",
               boxShadow: `0 0 0 3px ${theme.palette.primary.main}1a`,
-              // bgcolor: "background.paper",
             },
             "&:disabled": { opacity: 0.5 },
           }}
@@ -227,8 +226,9 @@ export function DemoCard() {
       variant="outlined"
       sx={{
         borderRadius: 2,
-        // p: { xs: "20px 16px", sm: "25px" },
         boxShadow: 3,
+        width: "100%",
+        minWidth: 340,
         bgcolor: (theme) =>
           theme.palette.mode === "dark" ? "#131415" : "#F2F2F2",
       }}
@@ -239,10 +239,6 @@ export function DemoCard() {
         sx={{
           my: 1,
           mx: 2,
-          // alignItems: "center",
-          // display: "flex",
-          // my: "auto",
-          // alignContent: "center",
         }}
       >
         Try Demo
@@ -255,7 +251,7 @@ export function DemoCard() {
           sx={{ p: { xs: "20px 16px", sm: "25px" } }}
         >
           <Typography
-            variant="body1"
+            variant="body2"
             sx={{ mb: 2, mt: 2, color: "text.secondary" }}
           >
             Get hands-on experience with Authy. This is just a demo and the code
@@ -337,7 +333,7 @@ export function DemoCard() {
       )}
 
       {stage === "verify" && (
-        <Box component="form" onSubmit={handleVerify}>
+        <Box sx={{ p: { xs: "20px 16px", sm: "25px" } }} component="form" onSubmit={handleVerify}>
           <Typography variant="h6" fontWeight={600} mb={2}>
             Enter your code
           </Typography>
@@ -381,7 +377,7 @@ export function DemoCard() {
       )}
 
       {stage === "success" && (
-        <Box textAlign="center">
+        <Box sx={{ p: { xs: "20px 16px", sm: "25px" }, textAlign: "center" }}>
           <Box
             sx={{
               width: 56,
