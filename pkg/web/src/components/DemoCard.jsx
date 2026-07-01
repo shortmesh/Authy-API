@@ -13,6 +13,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import { PlainButton } from "./buttons";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+const OTP_LENGTH = 6;
 
 function useWidgetScript() {
   useEffect(() => {
@@ -29,23 +30,23 @@ function OTPInputs({ value, onChange, disabled }) {
   const inputs = useRef([]);
   const theme = useTheme();
 
-  function handleChange(i, e) {
+  function handleChange(index, e) {
     const digit = e.target.value.replace(/\D/g, "").slice(-1);
-    const chars = value.padEnd(6, " ").split("");
-    chars[i] = digit || " ";
+    const chars = value.padEnd(OTP_LENGTH, " ").split("");
+    chars[index] = digit || " ";
     const next = chars.join("").trimEnd();
-    onChange(next.slice(0, 6));
-    if (digit && i < 5) inputs.current[i + 1]?.focus();
+    onChange(next.slice(0, OTP_LENGTH));
+    if (digit && index < OTP_LENGTH - 1) inputs.current[index + 1]?.focus();
   }
 
-  function handleKeyDown(i, e) {
+  function handleKeyDown(index, e) {
     if (e.key === "Backspace") {
-      if (value[i]) {
-        const chars = value.padEnd(6, " ").split("");
-        chars[i] = " ";
+      if (value[index]) {
+        const chars = value.padEnd(OTP_LENGTH, " ").split("");
+        chars[index] = " ";
         onChange(chars.join("").trimEnd());
-      } else if (i > 0) {
-        inputs.current[i - 1]?.focus();
+      } else if (index > 0) {
+        inputs.current[index - 1]?.focus();
       }
     }
   }
@@ -54,28 +55,28 @@ function OTPInputs({ value, onChange, disabled }) {
     const pasted = e.clipboardData
       .getData("text")
       .replace(/\D/g, "")
-      .slice(0, 6);
+      .slice(0, OTP_LENGTH);
     onChange(pasted);
-    inputs.current[Math.min(pasted.length, 5)]?.focus();
+    inputs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
     e.preventDefault();
   }
 
   return (
     <Stack direction="row" spacing={1} mb={2}>
-      {Array.from({ length: 6 }, (_, i) => (
+      {Array.from({ length: OTP_LENGTH }, (_, index) => (
         <Box
-          key={i}
+          key={index}
           component="input"
-          ref={(el) => (inputs.current[i] = el)}
+          ref={(el) => (inputs.current[index] = el)}
           type="text"
           inputMode="numeric"
           maxLength={1}
-          value={value[i] && value[i] !== " " ? value[i] : ""}
-          onChange={(e) => handleChange(i, e)}
-          onKeyDown={(e) => handleKeyDown(i, e)}
+          value={value[index] && value[index] !== " " ? value[index] : ""}
+          onChange={(e) => handleChange(index, e)}
+          onKeyDown={(e) => handleKeyDown(index, e)}
           onPaste={handlePaste}
           disabled={disabled}
-          autoComplete={i === 0 ? "one-time-code" : "off"}
+          autoComplete="one-time-code"
           sx={{
             flex: 1,
             width: 0,
@@ -154,7 +155,7 @@ export function DemoCard() {
     }
   }
 
-  const platforms_url = `${API_BASE}/platforms`;
+  const platformsUrl = `${API_BASE}/platforms`;
 
   async function handlePhoneSubmit(e) {
     e.preventDefault();
@@ -168,7 +169,7 @@ export function DemoCard() {
       return;
     }
     window.ShortMeshWidget.open({
-      endpoints: { platforms: platforms_url },
+      endpoints: { platforms: platformsUrl },
       onSelect: (chosenPlatform) => {
         setPlatform(chosenPlatform);
         sendOTP(chosenPlatform);
@@ -179,8 +180,8 @@ export function DemoCard() {
 
   async function handleVerify(e) {
     e.preventDefault();
-    if (otp.replace(/\s/g, "").length !== 6) {
-      setError("Please enter the full 6-digit code.");
+    if (otp.replace(/\s/g, "").length !== OTP_LENGTH) {
+      setError(`Please enter the full ${OTP_LENGTH}-digit code.`);
       return;
     }
     setLoading(true);
@@ -361,7 +362,7 @@ export function DemoCard() {
           <PlainButton
             type="submit"
             fullWidth
-            disabled={loading || otp.replace(/\s/g, "").length !== 6}
+            disabled={loading || otp.replace(/\s/g, "").length !== OTP_LENGTH}
             sx={{ textTransform: "none", py: 1.2, mt: 2.5 }}
           >
             {loading ? "Verifying…" : "Verify"}
