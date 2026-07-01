@@ -320,7 +320,8 @@ export function HowItWorks() {
   const [tab, setTab] = useState(0);
 
   const FORM =
-    process.env.VITE_APP_FOSS_FORM_URL || "https://forms.gle/jDZbSPaRqhEhExWZ9";
+    import.meta.env.VITE_APP_FOSS_FORM_URL ||
+    "https://forms.gle/jDZbSPaRqhEhExWZ9";
 
   return (
     <Box
@@ -432,8 +433,8 @@ export function HowItWorks() {
               src={WidgetImage}
               alt="Authy widget"
               sx={{
-                width: "100%",
-                maxWidth: 480,
+                width: "80%",
+                maxWidth: 400,
                 borderRadius: 2,
                 boxShadow: 6,
               }}
