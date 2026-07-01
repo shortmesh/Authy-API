@@ -160,7 +160,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/definitions/platforms.PlatformInfo"
                             }
                         }
                     },
@@ -267,6 +267,23 @@ const docTemplate = `{
                 "error": {
                     "type": "string",
                     "example": "message"
+                }
+            }
+        },
+        "platforms.PlatformInfo": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string",
+                    "example": "WhatsApp"
+                },
+                "icon_url": {
+                    "type": "string",
+                    "example": "http://localhost:8080/demo/Whatsapp.svg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "wa"
                 }
             }
         }

@@ -54,9 +54,38 @@ func (h *PlatformHandler) List(c echo.Context) error {
 
 	platforms := make(ListPlatformsResponse, 0, len(platformMap))
 	for platform := range platformMap {
-		platforms = append(platforms, platform)
+		platforms = append(platforms, getPlatformInfo(c, platform))
 	}
 
 	logger.Info("Platforms listed successfully")
 	return c.JSON(http.StatusOK, platforms)
+}
+
+func getPlatformInfo(c echo.Context, platformName string) PlatformInfo {
+	scheme := "http"
+	if c.Request().TLS != nil || c.Request().Header.Get("X-Forwarded-Proto") == "https" {
+		scheme = "https"
+	}
+	host := c.Request().Host
+
+	displayName := platformName
+	iconFile := "favicon.svg"
+
+	switch platformName {
+	case "wa", "whatsapp", "WhatsApp":
+		displayName = "WhatsApp"
+		iconFile = "Whatsapp.svg"
+	case "telegram", "Telegram":
+		displayName = "Telegram"
+		iconFile = "Telegram.svg"
+	case "signal", "Signal":
+		displayName = "Signal"
+		iconFile = "Signal.svg"
+	}
+
+	return PlatformInfo{
+		DisplayName: displayName,
+		Name:        platformName,
+		IconURL:     fmt.Sprintf("%s://%s/demo/%s", scheme, host, iconFile),
+	}
 }
