@@ -1,27 +1,4 @@
 (function () {
-  // Resolve the base URL from the script tag itself so that icon paths always
-  // point back to the host, even when the widget is embedded on an
-  // external domain. Falls back to the page origin if currentScript is unavailable.
-  const _scriptSrc =
-    (document.currentScript && document.currentScript.src) || "";
-  const BASE_URL = _scriptSrc
-    ? _scriptSrc.substring(0, _scriptSrc.lastIndexOf("/") + 1)
-    : "/";
-
-  const PLATFORM_REGISTRY = {
-    wa: {
-      label: "WhatsApp",
-      icon: BASE_URL + "Whatsapp.svg",
-    },
-    telegram: {
-      label: "Telegram",
-      icon: BASE_URL + "Telegram.svg",
-    },
-    signal: {
-      label: "Signal",
-      icon: BASE_URL + "Signal.svg",
-    },
-  };
   let widgetConfig = {
     endpoints: {
       platforms: null,
@@ -29,6 +6,106 @@
     onSelect: function () {},
     onError: function () {},
   };
+
+  function normalizePlatform(raw) {
+    if (typeof raw === "string") {
+      const key = raw.toLowerCase();
+      return {
+        name: key,
+        display_name: key.charAt(0).toUpperCase() + key.slice(1),
+        icon_url: "",
+      };
+    }
+
+    if (raw && typeof raw === "object") {
+      const key = String(raw.name || "").toLowerCase();
+      if (!key) return null;
+      return {
+        name: key,
+        display_name:
+          String(raw.display_name || "").trim() ||
+          key.charAt(0).toUpperCase() + key.slice(1),
+        icon_url: String(raw.icon_url || "").trim(),
+      };
+    }
+
+    return null;
+  }
+
+  function pickFirstColor(candidates) {
+    for (const candidate of candidates) {
+      const color = String(candidate || "").trim();
+      if (!color) continue;
+      if (window.CSS && typeof window.CSS.supports === "function") {
+        if (window.CSS.supports("color", color)) return color;
+      } else {
+        return color;
+      }
+    }
+    return "";
+  }
+
+  function resolvePrimaryColor(config) {
+    const fromConfig = pickFirstColor([
+      config?.primaryColor,
+      config?.theme?.primaryColor,
+      config?.theme?.primary,
+    ]);
+    if (fromConfig) return fromConfig;
+
+    const rootStyles = window.getComputedStyle(document.documentElement);
+    const fromVars = pickFirstColor([
+      rootStyles.getPropertyValue("--primary-color"),
+      rootStyles.getPropertyValue("--color-primary"),
+      rootStyles.getPropertyValue("--brand-primary"),
+      rootStyles.getPropertyValue("--mui-palette-primary-main"),
+      rootStyles.getPropertyValue("--bs-primary"),
+    ]);
+    if (fromVars) return fromVars;
+
+    return "#4b5bdc";
+  }
+
+  function parseCssColorToRgb(color) {
+    const probe = document.createElement("span");
+    probe.style.color = "";
+    probe.style.color = color;
+    if (!probe.style.color) return null;
+
+    document.body.appendChild(probe);
+    const computed = window.getComputedStyle(probe).color;
+    probe.remove();
+
+    const match = computed.match(
+      /rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i,
+    );
+    if (!match) return null;
+
+    return {
+      r: Math.max(0, Math.min(255, Number(match[1]))),
+      g: Math.max(0, Math.min(255, Number(match[2]))),
+      b: Math.max(0, Math.min(255, Number(match[3]))),
+    };
+  }
+
+  function getAccessibleTextColor(backgroundColor) {
+    const rgb = parseCssColorToRgb(backgroundColor);
+    if (!rgb) return "#ffffff";
+
+    const toLinear = (channel) => {
+      const c = channel / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+
+    const luminance =
+      0.2126 * toLinear(rgb.r) +
+      0.7152 * toLinear(rgb.g) +
+      0.0722 * toLinear(rgb.b);
+
+    const contrastWithWhite = 1.05 / (luminance + 0.05);
+    const contrastWithBlack = (luminance + 0.05) / 0.05;
+    return contrastWithBlack >= contrastWithWhite ? "#111111" : "#ffffff";
+  }
 
   function createWidget(config = {}) {
     widgetConfig.endpoints = config.endpoints || {};
@@ -44,7 +121,9 @@
     const shadowRoot = shadowHost.attachShadow({ mode: "open" });
     document.body.appendChild(shadowHost);
 
-    injectStyles(shadowRoot);
+    const primaryColor = resolvePrimaryColor(config);
+    const primaryTextColor = getAccessibleTextColor(primaryColor);
+    injectStyles(shadowRoot, primaryColor, primaryTextColor);
 
     const overlay = document.createElement("div");
     overlay.id = "shortmesh-overlay";
@@ -87,12 +166,14 @@
         return;
       }
 
-      const supportedPlatformsArray = platformsFromAPI.filter(
-        (p) => PLATFORM_REGISTRY[p],
-      );
+      const supportedPlatformsArray = Array.isArray(platformsFromAPI)
+        ? platformsFromAPI.map(normalizePlatform).filter(Boolean)
+        : [];
 
       if (supportedPlatformsArray.length === 0) {
-        const apiIds = platformsFromAPI.join(", ");
+        const apiIds = Array.isArray(platformsFromAPI)
+          ? platformsFromAPI.map((p) => JSON.stringify(p)).join(", ")
+          : String(platformsFromAPI);
         console.error("ShortMesh: No platforms found. API returned:", apiIds);
         content.innerHTML = `
     <h2>Verify your account</h2>
@@ -103,17 +184,26 @@
       }
 
       const supportedPlatforms = supportedPlatformsArray
-        .map((p) => {
-          const registry = PLATFORM_REGISTRY[p];
+        .map((platform) => {
+          const safeName = String(platform.name || "");
+          const safeDisplayName = String(platform.display_name || safeName);
+          const icon = String(platform.icon_url || "");
+          const encodedPlatform = encodeURIComponent(
+            JSON.stringify({
+              name: safeName,
+              display_name: safeDisplayName,
+              icon_url: icon,
+            }),
+          );
 
           return `
-      <div class="shortmesh-platform" data-platform="${p}">
+      <div class="shortmesh-platform" data-platform="${encodedPlatform}">
         <span class="icon">
           <img style="width: 26px; height: 26px; margin: auto;" 
-               src="${registry.icon}" 
-               alt="${registry.label}" />
+               src="${icon}" 
+               alt="${safeDisplayName}" />
         </span>
-        ${registry.label}
+        ${safeDisplayName}
       </div>
     `;
         })
@@ -142,7 +232,7 @@
         el.onclick = () => {
           platforms.forEach((p) => p.classList.remove("active"));
           el.classList.add("active");
-          selected = el.dataset.platform;
+          selected = JSON.parse(decodeURIComponent(el.dataset.platform || "{}"));
           continueBtn.disabled = false;
         };
       });
@@ -150,7 +240,7 @@
       content.querySelector(".secondary").onclick = () => shadowHost.remove();
 
       continueBtn.onclick = () => {
-        if (!selected) return;
+        if (!selected || !selected.name) return;
         widgetConfig.onSelect(selected);
         shadowHost.remove();
       };
@@ -159,7 +249,7 @@
     renderSelect();
   }
 
-  function injectStyles(root) {
+  function injectStyles(root, primaryColor, primaryTextColor) {
     const style = document.createElement("style");
     style.innerHTML = `
       #shortmesh-overlay {
@@ -249,7 +339,7 @@
       }
 
       .shortmesh-platform.active {
-        border: 2px solid #4b5bdc;
+        border: 2px solid ${primaryColor};
       }
 
       .icon {
@@ -271,8 +361,8 @@
       }
 
       .btn.primary {
-        background: #4b5bdc;
-        color: white;
+        background: ${primaryColor};
+        color: ${primaryTextColor};
       }
 
       .btn.primary:disabled {
