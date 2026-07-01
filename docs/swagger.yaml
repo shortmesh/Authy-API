@@ -57,6 +57,18 @@ definitions:
         example: message
         type: string
     type: object
+  platforms.PlatformInfo:
+    properties:
+      display_name:
+        example: WhatsApp
+        type: string
+      icon_url:
+        example: http://localhost:8080/demo/Whatsapp.svg
+        type: string
+      name:
+        example: wa
+        type: string
+    type: object
 info:
   contact: {}
   description: API for Authy service
@@ -156,7 +168,7 @@ paths:
           description: List of platforms retrieved successfully
           schema:
             items:
-              type: string
+              $ref: '#/definitions/platforms.PlatformInfo'
             type: array
         "401":
           description: Invalid or missing authorization header

@@ -10,7 +10,7 @@ install: ## Install dependencies
 	@echo "Installing dependencies..."
 	yarn install
 
-build: ## Build the Vite app for production
+build: install ## Build the Vite app for production
 	@echo "Building Vite app..."
 	yarn build
 	@echo "Build complete. Output in dist/"
