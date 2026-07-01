@@ -74,13 +74,13 @@ func getPlatformInfo(c echo.Context, platformName string) PlatformInfo {
 	switch platformName {
 	case "wa", "whatsapp", "WhatsApp":
 		displayName = "WhatsApp"
-		iconFile = "Whatsapp.svg"
+		iconFile = "qhatsapp.png"
 	case "telegram", "Telegram":
 		displayName = "Telegram"
-		iconFile = "Telegram.svg"
+		iconFile = "telegram.png"
 	case "signal", "Signal":
 		displayName = "Signal"
-		iconFile = "Signal.svg"
+		iconFile = "signal.png"
 	}
 
 	return PlatformInfo{
