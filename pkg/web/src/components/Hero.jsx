@@ -2,7 +2,9 @@ import { Box, Chip, Grid, Link, Typography, useTheme } from "@mui/material";
 import { PrimaryButton } from "./buttons";
 import { DemoCard } from "./DemoCard";
 
-const FORM = process.env.VITE_APP_FOSS_FORM_URL || "https://forms.gle/jDZbSPaRqhEhExWZ9";
+const FORM =
+  import.meta.env.VITE_APP_FOSS_FORM_URL ||
+  "https://forms.gle/jDZbSPaRqhEhExWZ9";
 
 export function Hero() {
   const theme = useTheme();

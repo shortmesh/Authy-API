@@ -13,7 +13,6 @@ import CheckIcon from "@mui/icons-material/Check";
 import { PlainButton } from "./buttons";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/v1";
-const OTP_LENGTH = 6;
 
 function useWidgetScript() {
   useEffect(() => {
@@ -26,27 +25,28 @@ function useWidgetScript() {
   }, []);
 }
 
+
 function OTPInputs({ value, onChange, disabled }) {
   const inputs = useRef([]);
   const theme = useTheme();
 
-  function handleChange(index, e) {
+  function handleChange(i, e) {
     const digit = e.target.value.replace(/\D/g, "").slice(-1);
-    const chars = value.padEnd(OTP_LENGTH, " ").split("");
-    chars[index] = digit || " ";
+    const chars = value.padEnd(6, " ").split("");
+    chars[i] = digit || " ";
     const next = chars.join("").trimEnd();
-    onChange(next.slice(0, OTP_LENGTH));
-    if (digit && index < OTP_LENGTH - 1) inputs.current[index + 1]?.focus();
+    onChange(next.slice(0, 6));
+    if (digit && i < 5) inputs.current[i + 1]?.focus();
   }
 
-  function handleKeyDown(index, e) {
+  function handleKeyDown(i, e) {
     if (e.key === "Backspace") {
-      if (value[index]) {
-        const chars = value.padEnd(OTP_LENGTH, " ").split("");
-        chars[index] = " ";
+      if (value[i]) {
+        const chars = value.padEnd(6, " ").split("");
+        chars[i] = " ";
         onChange(chars.join("").trimEnd());
-      } else if (index > 0) {
-        inputs.current[index - 1]?.focus();
+      } else if (i > 0) {
+        inputs.current[i - 1]?.focus();
       }
     }
   }
@@ -55,28 +55,28 @@ function OTPInputs({ value, onChange, disabled }) {
     const pasted = e.clipboardData
       .getData("text")
       .replace(/\D/g, "")
-      .slice(0, OTP_LENGTH);
+      .slice(0, 6);
     onChange(pasted);
-    inputs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
+    inputs.current[Math.min(pasted.length, 5)]?.focus();
     e.preventDefault();
   }
 
   return (
     <Stack direction="row" spacing={1} mb={2}>
-      {Array.from({ length: OTP_LENGTH }, (_, index) => (
+      {Array.from({ length: 6 }, (_, i) => (
         <Box
-          key={index}
+          key={i}
           component="input"
-          ref={(el) => (inputs.current[index] = el)}
+          ref={(el) => (inputs.current[i] = el)}
           type="text"
           inputMode="numeric"
           maxLength={1}
-          value={value[index] && value[index] !== " " ? value[index] : ""}
-          onChange={(e) => handleChange(index, e)}
-          onKeyDown={(e) => handleKeyDown(index, e)}
+          value={value[i] && value[i] !== " " ? value[i] : ""}
+          onChange={(e) => handleChange(i, e)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
           disabled={disabled}
-          autoComplete="one-time-code"
+          autoComplete={i === 0 ? "one-time-code" : "off"}
           sx={{
             flex: 1,
             width: 0,
@@ -106,10 +106,11 @@ function OTPInputs({ value, onChange, disabled }) {
 
 export function DemoCard() {
   useWidgetScript();
+  const theme = useTheme();
 
   const [stage, setStage] = useState("idle");
   const [phone, setPhone] = useState("");
-  const [platform, setPlatform] = useState("");
+  const [platform, setPlatform] = useState(null);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -117,13 +118,18 @@ export function DemoCard() {
   function reset() {
     setStage("idle");
     setPhone("");
-    setPlatform("");
+    setPlatform(null);
     setOtp("");
     setError("");
     setLoading(false);
   }
 
   async function sendOTP(chosenPlatform) {
+    const platformName =
+      typeof chosenPlatform === "string"
+        ? chosenPlatform
+        : chosenPlatform?.name || "";
+
     setLoading(true);
     setStage("sending");
     setError("");
@@ -133,7 +139,7 @@ export function DemoCard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phone_number: phone,
-          platform: chosenPlatform,
+          platform: platformName,
         }),
       });
       const data = await res.json();
@@ -155,7 +161,7 @@ export function DemoCard() {
     }
   }
 
-  const platformsUrl = `${API_BASE}/platforms`;
+  const platforms_url = `${API_BASE}/platforms`;
 
   async function handlePhoneSubmit(e) {
     e.preventDefault();
@@ -169,9 +175,20 @@ export function DemoCard() {
       return;
     }
     window.ShortMeshWidget.open({
-      endpoints: { platforms: platformsUrl },
+      endpoints: { platforms: platforms_url },
+      primaryColor: theme.palette.primary.main,
       onSelect: (chosenPlatform) => {
-        setPlatform(chosenPlatform);
+        const normalized =
+          typeof chosenPlatform === "string"
+            ? {
+                name: chosenPlatform,
+                display_name:
+                  chosenPlatform.charAt(0).toUpperCase() +
+                  chosenPlatform.slice(1),
+                icon_url: "",
+              }
+            : chosenPlatform;
+        setPlatform(normalized);
         sendOTP(chosenPlatform);
       },
       onError: () => setError("Could not load platforms. Please try again."),
@@ -180,8 +197,8 @@ export function DemoCard() {
 
   async function handleVerify(e) {
     e.preventDefault();
-    if (otp.replace(/\s/g, "").length !== OTP_LENGTH) {
-      setError(`Please enter the full ${OTP_LENGTH}-digit code.`);
+    if (otp.replace(/\s/g, "").length !== 6) {
+      setError("Please enter the full 6-digit code.");
       return;
     }
     setLoading(true);
@@ -193,7 +210,7 @@ export function DemoCard() {
         body: JSON.stringify({
           code: otp.replace(/\s/g, ""),
           phone_number: phone,
-          platform,
+          platform: platform?.name || "",
         }),
       });
       const data = await res.json();
@@ -214,11 +231,12 @@ export function DemoCard() {
     }
   }
 
+  const platformName = platform?.name || "";
   const platformLabel =
-    platform === "wa"
-      ? "WhatsApp"
-      : platform
-        ? platform.charAt(0).toUpperCase() + platform.slice(1)
+    platform?.display_name
+      ? platform.display_name
+      : platformName
+        ? platformName.charAt(0).toUpperCase() + platformName.slice(1)
         : "";
 
   return (
@@ -349,6 +367,20 @@ export function DemoCard() {
               <>
                 {" "}
                 via <strong>{platformLabel}</strong>
+                {platform?.icon_url && (
+                  <Box
+                    component="img"
+                    src={platform.icon_url}
+                    alt={platformLabel}
+                    sx={{
+                      width: 18,
+                      height: 18,
+                      display: "inline-block",
+                      verticalAlign: "text-bottom",
+                      ml: 0.75,
+                    }}
+                  />
+                )}
               </>
             )}
             .
@@ -362,7 +394,7 @@ export function DemoCard() {
           <PlainButton
             type="submit"
             fullWidth
-            disabled={loading || otp.replace(/\s/g, "").length !== OTP_LENGTH}
+            disabled={loading || otp.replace(/\s/g, "").length !== 6}
             sx={{ textTransform: "none", py: 1.2, mt: 2.5 }}
           >
             {loading ? "Verifying…" : "Verify"}

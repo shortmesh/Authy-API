@@ -11,7 +11,9 @@ import { Nav } from "../components/Nav";
 import { Footer } from "../components/Footer";
 import { PrimaryButton, PlainButton } from "../components/buttons";
 
-const FORM = process.env.VITE_APP_FOSS_FORM_URL || "https://forms.gle/jDZbSPaRqhEhExWZ9";
+const FORM =
+  import.meta.env.VITE_APP_FOSS_FORM_URL ||
+  "https://forms.gle/jDZbSPaRqhEhExWZ9";
 
 const FOSS_BENEFITS = [
   {
